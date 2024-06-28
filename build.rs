@@ -8,8 +8,8 @@ fn main() {
 
     let _ = std::fs::create_dir(&format!("./{}", OUT_DIR));
 
-    println!("cargo:rustc-link-search=native=subproc/{}", OUT_DIR);
-    println!("cargo:rustc-env=LD_LIBRARY_PATH={}", OUT_DIR);
+    println!("cargo:rustc-link-search=native=./{}", OUT_DIR);
+    println!("cargo:rustc-env=LD_LIBRARY_PATH=./{}", OUT_DIR);
 
     for file in C_FILES {
         Command::new("bash")

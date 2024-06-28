@@ -1,5 +1,5 @@
 use std::env::Args;
-use std::fs::write;
+use std::fs::{read, write};
 
 use crate::core::args::ArgType;
 use crate::core::media_container::MediaContainer;
@@ -39,7 +39,7 @@ impl Flux {
 
     /// Validates arguments before processing, to ensure that there was nothing weird supplied.
     pub fn validate_args(&self) -> Result<(), FluxError> {
-        let args = self.args_handler.fork();
+        let _args = self.args_handler.fork();
 
         Ok(())
     }
@@ -79,6 +79,6 @@ impl Flux {
 
     /// Reads an input file via filename or stdin.
     fn read_input(&self, path: String) -> Result<Vec<u8>, FluxError> {
-        todo!()
+        if path == "STDIN" { todo!() } else { Ok(read(path)?) }
     }
 }

@@ -96,6 +96,6 @@ pub fn decode_gif_to_dynamic_images(
     })
 }
 
-pub fn decode_video_to_dynamic_images(buf: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
+pub fn decode_video_to_dynamic_images(_buf: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
     todo!()
 }
