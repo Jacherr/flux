@@ -13,11 +13,13 @@ use super::media_object::MediaObject;
 /// the result of the previous operation!**
 pub struct MediaContainer {
     input_queue: InputQueue,
+    pub frame_limit: Option<u64>,
 }
 impl MediaContainer {
     pub fn new() -> Self {
         Self {
             input_queue: InputQueue::new(),
+            frame_limit: None,
         }
     }
 
@@ -43,5 +45,15 @@ impl MediaContainer {
 
         self.push_input(result);
         Ok(())
+    }
+
+    pub fn encode_next(&self) -> Result<Vec<u8>, FluxError> {
+        let next_image = self.pop_input()?;
+
+        if self.input_queue.len() > 0 {
+            return Err(FluxError::ResidualImages(self.input_queue.len() as u64));
+        }
+
+        next_image.encode()
     }
 }

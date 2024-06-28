@@ -7,7 +7,7 @@ impl MediaContainer {
     pub fn reverse(&self) -> Result<MediaObject, FluxError> {
         let input = self.pop_input()?;
         let out = if !input.is_encoded_video() {
-            let input = input.to_dynamic_images()?;
+            let input = input.to_dynamic_images(self.frame_limit)?;
             let audio = input.audio.clone();
             let repeat = input.repeat;
 

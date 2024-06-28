@@ -21,6 +21,12 @@ pub enum FluxError {
     UnsupportedFiletype,
     #[error("Input image is corrupt: {0}")]
     CorruptInput(String),
+    #[error("Input parameter error: {0}")]
+    ParameterError(String),
+    #[error("{0} residual images after encoding")]
+    ResidualImages(u64),
+    #[error("Error: {0}")]
+    Other(String),
 }
 
 impl From<std::io::Error> for FluxError {

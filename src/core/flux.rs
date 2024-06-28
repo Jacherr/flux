@@ -1,4 +1,5 @@
 use std::env::Args;
+use std::fs::write;
 
 use crate::core::args::ArgType;
 use crate::core::media_container::MediaContainer;
@@ -7,7 +8,7 @@ use crate::core::media_object::MediaObject;
 use super::args::ArgsHandler;
 use super::error::FluxError;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum StepAction {
     /// An input was added to the input queue.
     InputConsumed,
@@ -15,6 +16,8 @@ pub enum StepAction {
     OperationPerformed(String),
     /// The final output file descriptor was written to. This terminates this Flux instance.
     OutputWritten,
+    /// Some meta proprty has been set.
+    MetaPropertySet(&'static str),
 }
 
 /// Main stateful struct for the current Flux instance.
@@ -22,6 +25,7 @@ pub struct Flux {
     args_handler: ArgsHandler,
     previous_action: Option<StepAction>,
     media_container: MediaContainer,
+    verbose: bool,
 }
 impl Flux {
     pub fn new(args: Args) -> Self {
@@ -29,6 +33,7 @@ impl Flux {
             args_handler: ArgsHandler::new(args),
             previous_action: None,
             media_container: MediaContainer::new(),
+            verbose: false,
         }
     }
 
@@ -52,13 +57,24 @@ impl Flux {
             ArgType::InputPath(input) => {
                 let data = self.read_input(input)?;
                 self.media_container.push_input(MediaObject::Encoded(data));
+                self.previous_action = Some(StepAction::InputConsumed);
             },
-            ArgType::Operation(operation) => {},
-            ArgType::OutputPath(output) => {},
-            ArgType::Verbose => {},
+            ArgType::Operation(operation) => {
+                self.media_container.handle_operation(operation.clone())?;
+                self.previous_action = Some(StepAction::OperationPerformed(operation));
+            },
+            ArgType::OutputPath(output) => {
+                let encoded = self.media_container.encode_next()?;
+                write(output, encoded)?;
+                self.previous_action = Some(StepAction::OutputWritten);
+            },
+            ArgType::Verbose => {
+                self.verbose = true;
+                self.previous_action = Some(StepAction::MetaPropertySet("verbose"));
+            },
         }
 
-        todo!()
+        Ok(self.previous_action.clone().unwrap())
     }
 
     /// Reads an input file via filename or stdin.

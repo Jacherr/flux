@@ -31,3 +31,20 @@ pub fn convert_ratio_to_integer(numer: u32, denom: u32) -> u32 {
 
     *out
 }
+
+pub fn get_buf_index_in_buf(buf: &[u8], search: &[u8]) -> isize {
+    let mut index = 0;
+    let mut result: isize = 0;
+    while index < (buf.len() - search.len()) {
+        let next_bytes = &buf[index..(index + search.len())];
+        if next_bytes == search {
+            result = index as isize;
+            break;
+        } else if index == buf.len() - search.len() - 1 {
+            result = -1;
+            break;
+        };
+        index += 1;
+    }
+    result
+}

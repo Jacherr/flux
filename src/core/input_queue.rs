@@ -1,8 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use image::DynamicImage;
-
 use super::media_object::MediaObject;
 
 /// The input queue. Inputs can be of several types depending on the source. This can help

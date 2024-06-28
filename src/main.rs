@@ -15,6 +15,7 @@ pub mod core;
 pub mod operations;
 pub mod processing;
 pub mod util;
+pub mod vips;
 
 fn main() {
     let args = std::env::args();

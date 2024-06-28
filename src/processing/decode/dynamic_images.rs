@@ -1,16 +1,18 @@
 use std::io::Cursor;
 
-use image::codecs::gif::Repeat;
+use image::codecs::gif::{GifDecoder, Repeat};
 use image::codecs::png::PngDecoder;
-use image::{load_from_memory, AnimationDecoder};
+use image::{load_from_memory, AnimationDecoder, Frame, ImageResult};
 
 use crate::core::error::FluxError;
 use crate::core::media_object::DynamicImagesMediaObject;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
 use crate::processing::filetype::{get_sig_incl_mp4, Type};
+use crate::processing::gif::gif_get_repeat_count;
 use crate::processing::type_conversion::convert_frames_to_dynamic_images;
+use crate::vips::vips_transcode_to;
 
-pub fn decode_to_dynamic_images(input: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
+pub fn decode_to_dynamic_images(input: &[u8], frame_limit: Option<u64>) -> Result<DynamicImagesMediaObject, FluxError> {
     let filetype = get_sig_incl_mp4(input).ok_or(FluxError::UnsupportedFiletype)?;
 
     let dyn_images = match filetype {
@@ -20,7 +22,9 @@ pub fn decode_to_dynamic_images(input: &[u8]) -> Result<DynamicImagesMediaObject
             repeat: Repeat::Infinite,
         },
         Type::Png => decode_png_to_dynamic_images(input)?,
-        _ => todo!(),
+        Type::Webp => decode_webp_to_dynamic_images(input)?,
+        Type::Gif => decode_gif_to_dynamic_images(input, frame_limit)?,
+        Type::Webm | Type::Mp4 => decode_video_to_dynamic_images(input)?,
     };
 
     Ok(dyn_images)
@@ -55,4 +59,43 @@ pub fn decode_png_to_dynamic_images(buf: &[u8]) -> Result<DynamicImagesMediaObje
             repeat: Repeat::Infinite,
         })
     }
+}
+
+pub fn decode_webp_to_dynamic_images(buf: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
+    let buf = vips_transcode_to(buf, ".png")?;
+    let image = DynamicImageWrapper::new(load_from_memory(&buf)?, None);
+    Ok(DynamicImagesMediaObject {
+        images: vec![image],
+        repeat: Repeat::Infinite,
+        audio: None,
+    })
+}
+
+pub fn decode_gif_to_dynamic_images(
+    buf: &[u8],
+    frame_limit: Option<u64>,
+) -> Result<DynamicImagesMediaObject, FluxError> {
+    let decoder = GifDecoder::new(Cursor::new(buf))?;
+    let frames = decoder
+        .into_frames()
+        .take(if let Some(f) = frame_limit {
+            f as usize
+        } else {
+            usize::MAX
+        })
+        .collect::<ImageResult<Vec<Frame>>>()?;
+
+    let repeats = gif_get_repeat_count(buf);
+
+    let images = convert_frames_to_dynamic_images(frames);
+
+    Ok(DynamicImagesMediaObject {
+        images,
+        repeat: repeats,
+        audio: None,
+    })
+}
+
+pub fn decode_video_to_dynamic_images(buf: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
+    todo!()
 }
