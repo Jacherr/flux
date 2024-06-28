@@ -7,6 +7,8 @@ pub enum ArgError {
     ArgsExhausted,
     #[error("Unrecognised flag: {0}")]
     UnrecognisedFlag(String),
+    #[error("Error parsing flag options: {0}")]
+    FlagOptionParseError(String),
 }
 
 #[derive(Error, Debug)]
@@ -25,6 +27,8 @@ pub enum FluxError {
     ParameterError(String),
     #[error("{0} residual images after encoding")]
     ResidualImages(u64),
+    #[error("Error with input image: {0}")]
+    InputImageError(String),
     #[error("Error: {0}")]
     Other(String),
 }

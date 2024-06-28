@@ -1,5 +1,6 @@
 use std::env::Args;
 use std::fs::{read, write};
+use std::io::{stdin, Read};
 
 use crate::core::args::ArgType;
 use crate::core::media_container::MediaContainer;
@@ -25,7 +26,6 @@ pub struct Flux {
     args_handler: ArgsHandler,
     previous_action: Option<StepAction>,
     media_container: MediaContainer,
-    verbose: bool,
 }
 impl Flux {
     pub fn new(args: Args) -> Self {
@@ -33,7 +33,6 @@ impl Flux {
             args_handler: ArgsHandler::new(args),
             previous_action: None,
             media_container: MediaContainer::new(),
-            verbose: false,
         }
     }
 
@@ -60,17 +59,15 @@ impl Flux {
                 self.previous_action = Some(StepAction::InputConsumed);
             },
             ArgType::Operation(operation) => {
+                // operation string also contains options in the form of "operation[x=1:y=2:z=whatever]"
                 self.media_container.handle_operation(operation.clone())?;
                 self.previous_action = Some(StepAction::OperationPerformed(operation));
             },
             ArgType::OutputPath(output) => {
+                // todo: support encoding for format based on file extension
                 let encoded = self.media_container.encode_next()?;
                 write(output, encoded)?;
                 self.previous_action = Some(StepAction::OutputWritten);
-            },
-            ArgType::Verbose => {
-                self.verbose = true;
-                self.previous_action = Some(StepAction::MetaPropertySet("verbose"));
             },
         }
 
@@ -79,6 +76,12 @@ impl Flux {
 
     /// Reads an input file via filename or stdin.
     fn read_input(&self, path: String) -> Result<Vec<u8>, FluxError> {
-        if path == "STDIN" { todo!() } else { Ok(read(path)?) }
+        if path == "STDIN" {
+            let mut buf = vec![];
+            stdin().read_to_end(&mut buf)?;
+            Ok(buf)
+        } else {
+            Ok(read(path)?)
+        }
     }
 }

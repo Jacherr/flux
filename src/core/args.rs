@@ -13,13 +13,11 @@ mod flag {
 
     pub const FLAG_OPERATION: &'static str = "operation";
     pub const FLAG_INPUT: &'static str = "input";
-    pub const FLAG_VERBOSE: &'static str = "verbose";
 
     pub const FLAG_MAPPER: LazyCell<HashMap<&'static str, &'static str>> = LazyCell::new(|| {
         let mut h = HashMap::new();
         h.insert("o", "operation");
         h.insert("i", "input");
-        h.insert("v", "verbose");
         h
     });
 }
@@ -29,7 +27,6 @@ mod flag {
 pub enum ArgType {
     InputPath(String),
     Operation(String),
-    Verbose,
     OutputPath(String),
 }
 
@@ -96,7 +93,6 @@ impl ArgsHandler {
                 let input = self.args.borrow_mut().next().ok_or(ArgError::ArgsExhausted)?;
                 Ok(ArgType::InputPath(input))
             },
-            flag::FLAG_VERBOSE => Ok(ArgType::Verbose),
             _ => Err(ArgError::UnrecognisedFlag(flag.to_owned())),
         }
     }

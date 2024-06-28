@@ -8,6 +8,12 @@ impl MediaContainer {
         let input = self.pop_input()?;
         let out = if !input.is_encoded_video() {
             let input = input.to_dynamic_images(self.frame_limit)?;
+            if input.images.len() == 1 {
+                return Err(FluxError::InputImageError(
+                    "Reversing images requires more than one frame".to_string(),
+                ));
+            }
+
             let audio = input.audio.clone();
             let repeat = input.repeat;
 

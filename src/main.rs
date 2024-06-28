@@ -21,15 +21,19 @@ fn main() {
     let args = std::env::args();
     let mut flux = Flux::new(args);
 
-    flux.validate_args()
-        .context("Failed to validate input arguments")
-        .unwrap();
-
     loop {
-        let state = flux.step().context("Failed to process step").unwrap();
+        let state = flux.step().context("Failed to process step");
 
-        if state == StepAction::OutputWritten {
-            break;
+        match state {
+            Ok(s) => {
+                if s == StepAction::OutputWritten {
+                    break;
+                }
+            },
+            Err(e) => {
+                eprintln!("{e:#}");
+                break;
+            },
         }
     }
 }
