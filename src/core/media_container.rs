@@ -1,4 +1,7 @@
+use crate::core::error::{ArgError, FluxError};
 use crate::core::input_queue::InputQueue;
+
+use super::media_object::MediaObject;
 
 /// Main media container for Flux. Contains everything needed to process a range of input formats by
 /// splitting it down to its base components.\ These base components are typically a 2D Vec of
@@ -18,7 +21,27 @@ impl MediaContainer {
         }
     }
 
-    pub fn push_input(&self, input: Vec<u8>) {
+    pub fn push_input(&self, input: MediaObject) {
         self.input_queue.push(input)
+    }
+
+    pub fn pop_input(&self) -> Result<MediaObject, FluxError> {
+        self.input_queue
+            .unshift()
+            .ok_or(FluxError::Args(ArgError::ArgsExhausted))
+    }
+
+    /// Handles a new operation. When the operation (successfully) completes, the result of the
+    /// operation will be pushed to the input queue.\
+    /// To get the output of this operation, call `get_output`. This will pop the input queue and
+    /// encode the data (if necessary).
+    pub fn handle_operation(&self, operation: String) -> Result<(), FluxError> {
+        let result = match &operation[..] {
+            "reverse" => self.reverse()?,
+            _ => unimplemented!(),
+        };
+
+        self.push_input(result);
+        Ok(())
     }
 }

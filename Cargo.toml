@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.86"
 fnv = "1.0.7"
 image = "0.25.1"
+num-rational = "0.4.2"
+num_cpus = "1.16.0"
+rand = "0.8.5"
 rayon = "1.10.0"
 thiserror = "1.0.61"

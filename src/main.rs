@@ -7,12 +7,28 @@
     const_fn_floating_point_arithmetic
 )]
 
-use core::flux::Flux;
+use core::flux::{Flux, StepAction};
+
+use anyhow::Context;
 
 pub mod core;
+pub mod operations;
 pub mod processing;
+pub mod util;
 
 fn main() {
     let args = std::env::args();
-    let flux = Flux::new(args);
+    let mut flux = Flux::new(args);
+
+    flux.validate_args()
+        .context("Failed to validate input arguments")
+        .unwrap();
+
+    loop {
+        let state = flux.step().context("Failed to process step").unwrap();
+
+        if state == StepAction::OutputWritten {
+            break;
+        }
+    }
 }

@@ -1,10 +1,11 @@
 use std::env::Args;
 
-use crate::processing::media_container::MediaContainer;
+use crate::core::args::ArgType;
+use crate::core::media_container::MediaContainer;
+use crate::core::media_object::MediaObject;
 
 use super::args::ArgsHandler;
 use super::error::FluxError;
-use super::input_queue::InputQueue;
 
 #[derive(PartialEq)]
 pub enum StepAction {
@@ -31,6 +32,13 @@ impl Flux {
         }
     }
 
+    /// Validates arguments before processing, to ensure that there was nothing weird supplied.
+    pub fn validate_args(&self) -> Result<(), FluxError> {
+        let args = self.args_handler.fork();
+
+        Ok(())
+    }
+
     /// Steps through this instance by consuming the next input argument(s) and actioning upon it.
     pub fn step(&mut self) -> Result<StepAction, FluxError> {
         // if we already wrote the output theres nothing left to do
@@ -38,6 +46,23 @@ impl Flux {
             return Err(FluxError::NothingToDo);
         }
 
+        let next_arg = self.args_handler.parse_next().map_err(|e| FluxError::Args(e))?;
+
+        match next_arg {
+            ArgType::InputPath(input) => {
+                let data = self.read_input(input)?;
+                self.media_container.push_input(MediaObject::Encoded(data));
+            },
+            ArgType::Operation(operation) => {},
+            ArgType::OutputPath(output) => {},
+            ArgType::Verbose => {},
+        }
+
+        todo!()
+    }
+
+    /// Reads an input file via filename or stdin.
+    fn read_input(&self, path: String) -> Result<Vec<u8>, FluxError> {
         todo!()
     }
 }

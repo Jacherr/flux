@@ -1,5 +1,4 @@
-use std::cell::{LazyCell, RefCell};
-use std::collections::HashMap;
+use std::cell::RefCell;
 use std::env::Args;
 use std::rc::Rc;
 
@@ -35,6 +34,7 @@ pub enum ArgType {
 }
 
 /// Internal metadata and stateful information used by the argument parser.
+#[derive(Clone)]
 struct ArgsMetaInternal {}
 impl ArgsMetaInternal {
     pub fn new() -> Self {
@@ -62,6 +62,7 @@ impl ArgsHandler {
         }
     }
 
+    /// Parses the next argument. Consumes arguments as this function is called.
     pub fn parse_next(&self) -> Result<ArgType, ArgError> {
         let first = self.args.borrow_mut().next().ok_or(ArgError::ArgsExhausted)?;
 
@@ -84,6 +85,7 @@ impl ArgsHandler {
         }
     }
 
+    /// Handles an incoming flag by name. May consume additional arguments in order to do this.
     fn handle_flag(&self, flag: &str) -> Result<ArgType, ArgError> {
         match flag {
             flag::FLAG_OPERATION => {
@@ -96,6 +98,14 @@ impl ArgsHandler {
             },
             flag::FLAG_VERBOSE => Ok(ArgType::Verbose),
             _ => Err(ArgError::UnrecognisedFlag(flag.to_owned())),
+        }
+    }
+
+    /// Produces a clone of this ArgsHandler, allowing for lookahead validation etc.
+    pub fn fork(&self) -> Self {
+        Self {
+            args: self.args.clone(),
+            meta: self.meta.clone(),
         }
     }
 }
