@@ -1,10 +1,12 @@
 use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
-use crate::core::media_object::{DynamicImagesMediaObject, MediaObject};
 use crate::processing::ffmpeg::ffmpeg_operations;
+use crate::processing::media_object::{DynamicImagesMediaObject, MediaObject};
+
+use super::OperationResult;
 
 impl MediaContainer {
-    pub fn reverse(&self) -> Result<MediaObject, FluxError> {
+    pub fn reverse(&self) -> OperationResult {
         let input = self.pop_input()?;
         let out = if !input.is_encoded_video() {
             let input = input.to_dynamic_images(self.frame_limit)?;

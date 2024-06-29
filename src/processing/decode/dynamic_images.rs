@@ -5,10 +5,10 @@ use image::codecs::png::PngDecoder;
 use image::{load_from_memory, AnimationDecoder, Frame, ImageResult};
 
 use crate::core::error::FluxError;
-use crate::core::media_object::DynamicImagesMediaObject;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
 use crate::processing::filetype::{get_sig_incl_mp4, Type};
 use crate::processing::gif::gif_get_repeat_count;
+use crate::processing::media_object::DynamicImagesMediaObject;
 use crate::processing::type_conversion::convert_frames_to_dynamic_images;
 use crate::vips::vips_transcode_to;
 

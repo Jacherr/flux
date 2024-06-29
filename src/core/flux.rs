@@ -2,9 +2,11 @@ use std::env::Args;
 use std::fs::{read, write};
 use std::io::{stdin, Read};
 
+use tracing::debug;
+
 use crate::core::args::ArgType;
 use crate::core::media_container::MediaContainer;
-use crate::core::media_object::MediaObject;
+use crate::processing::media_object::MediaObject;
 
 use super::args::ArgsHandler;
 use super::error::FluxError;
@@ -54,7 +56,8 @@ impl Flux {
 
         match next_arg {
             ArgType::InputPath(input) => {
-                let data = self.read_input(input)?;
+                debug!("Reading input {input} to queue");
+                let data = self.read_input(&input)?;
                 self.media_container.push_input(MediaObject::Encoded(data));
                 self.previous_action = Some(StepAction::InputConsumed);
             },
@@ -64,7 +67,8 @@ impl Flux {
                 self.previous_action = Some(StepAction::OperationPerformed(operation));
             },
             ArgType::OutputPath(output) => {
-                // todo: support encoding for format based on file extension
+                debug!("Writing output to {output}");
+                // todo: support encoding for format based on file extension, and stdout
                 let encoded = self.media_container.encode_next()?;
                 write(output, encoded)?;
                 self.previous_action = Some(StepAction::OutputWritten);
@@ -75,7 +79,7 @@ impl Flux {
     }
 
     /// Reads an input file via filename or stdin.
-    fn read_input(&self, path: String) -> Result<Vec<u8>, FluxError> {
+    fn read_input(&self, path: &str) -> Result<Vec<u8>, FluxError> {
         if path == "STDIN" {
             let mut buf = vec![];
             stdin().read_to_end(&mut buf)?;

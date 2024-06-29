@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use super::media_object::MediaObject;
+use crate::processing::media_object::MediaObject;
 
 /// The input queue. Inputs can be of several types depending on the source. This can help
 /// unnecessary re-encodes when chaining operations.

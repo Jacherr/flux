@@ -1,9 +1,12 @@
 use std::collections::HashMap;
+use std::time::Instant;
+
+use tracing::debug;
 
 use crate::core::error::{ArgError, FluxError};
 use crate::core::input_queue::InputQueue;
 
-use super::media_object::MediaObject;
+use crate::processing::media_object::MediaObject;
 
 /// Main media container for Flux. Contains everything needed to process a range of input formats by
 /// splitting it down to its base components.\ These base components are typically a 2D Vec of
@@ -82,12 +85,16 @@ impl MediaContainer {
     /// encode the data (if necessary).
     pub fn handle_operation(&self, operation: String) -> Result<(), FluxError> {
         let parsed = MediaContainer::parse_operation_name(&operation)?;
+        debug!("Performing operation {operation}");
+        let start = Instant::now();
 
         let result = match &parsed.0[..] {
             "reverse" => self.reverse()?,
+            "blur" => self.blur(None)?,
             _ => unimplemented!(),
         };
 
+        debug!("Operation {operation}: took {:?}", start.elapsed());
         self.push_input(result);
         Ok(())
     }

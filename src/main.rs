@@ -10,6 +10,9 @@
 use core::flux::{Flux, StepAction};
 
 use anyhow::Context;
+use time::format_description;
+use tracing_subscriber::fmt::time::UtcTime;
+use tracing_subscriber::EnvFilter;
 
 pub mod core;
 pub mod operations;
@@ -18,6 +21,16 @@ pub mod util;
 pub mod vips;
 
 fn main() {
+    let filter = EnvFilter::from_default_env();
+
+    let description = "[year]-[month]-[day] [hour]:[minute]:[second]";
+
+    tracing_subscriber::fmt()
+        .with_timer(UtcTime::new(format_description::parse(description).unwrap()))
+        .with_line_number(true)
+        .with_env_filter(filter)
+        .init();
+
     let args = std::env::args();
     let mut flux = Flux::new(args);
 

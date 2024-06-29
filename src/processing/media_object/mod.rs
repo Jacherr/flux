@@ -1,20 +1,12 @@
 use std::borrow::Cow;
 
-use image::codecs::gif::Repeat;
-
+use crate::core::error::FluxError;
 use crate::processing::decode::dynamic_images::decode_to_dynamic_images;
-use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
 use crate::processing::encode::encode_object;
 use crate::processing::filetype::{get_sig_incl_mp4, Type};
 
-use super::error::FluxError;
-
-#[derive(Clone)]
-pub struct DynamicImagesMediaObject {
-    pub images: Vec<DynamicImageWrapper>,
-    pub audio: Option<Vec<u8>>,
-    pub repeat: Repeat,
-}
+pub mod dynamic_images;
+pub use dynamic_images::DynamicImagesMediaObject;
 
 pub enum MediaObject {
     Encoded(Vec<u8>),

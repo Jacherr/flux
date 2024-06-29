@@ -4,8 +4,8 @@ use image::codecs::png::PngEncoder;
 use image::{Delay, ExtendedColorType, ImageEncoder};
 
 use crate::core::error::FluxError;
-use crate::core::media_object::MediaObject;
 use crate::processing::ffmpeg::create_video_from_split;
+use crate::processing::media_object::MediaObject;
 
 pub mod gif;
 
