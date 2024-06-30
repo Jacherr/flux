@@ -24,6 +24,8 @@ pub enum StepAction {
 }
 
 /// Main stateful struct for the current Flux instance.
+///
+/// A Flux instance must be stepped through to perform any action.
 pub struct Flux {
     args_handler: ArgsHandler,
     previous_action: Option<StepAction>,
