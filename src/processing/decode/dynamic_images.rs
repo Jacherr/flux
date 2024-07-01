@@ -6,6 +6,7 @@ use image::{load_from_memory, AnimationDecoder, Frame, ImageResult};
 
 use crate::core::error::FluxError;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
+use crate::processing::ffmpeg;
 use crate::processing::filetype::{get_sig_incl_mp4, Type};
 use crate::processing::gif::gif_get_repeat_count;
 use crate::processing::media_object::DynamicImagesMediaObject;
@@ -96,6 +97,18 @@ pub fn decode_gif_to_dynamic_images(
     })
 }
 
-pub fn decode_video_to_dynamic_images(_buf: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
-    todo!()
+pub fn decode_video_to_dynamic_images(buf: &[u8]) -> Result<DynamicImagesMediaObject, FluxError> {
+    let split = ffmpeg::split_video(buf)?;
+
+    let object = DynamicImagesMediaObject {
+        images: split
+            .0
+            .into_iter()
+            .map(|x| DynamicImageWrapper::new(x, None))
+            .collect::<Vec<_>>(),
+        audio: Some(split.1),
+        repeat: Repeat::Infinite,
+    };
+
+    Ok(object)
 }

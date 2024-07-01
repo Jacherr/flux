@@ -1,4 +1,3 @@
-use core::slice;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env::Args;
@@ -141,7 +140,6 @@ impl ArgsHandler {
                     ))));
                 }
 
-                println!("{}", split.1);
                 parsed_options.insert(split.0.to_owned(), split.1.to_owned());
             }
 

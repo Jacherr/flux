@@ -7,7 +7,7 @@ int v_vips_init()
 	vips_leak_set(TRUE);
 	VipsImage *image;
 	// cache twemoji font
-	vips_text(&image, ".", "fontfile", "../subproc/assets/fonts/TwemojiCOLR0.otf", NULL);
+	vips_text(&image, ".", "fontfile", "/usr/share/fonts/TwemojiCOLR0.otf", NULL);
 	g_object_unref(image);
 	return i;
 }

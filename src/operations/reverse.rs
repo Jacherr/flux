@@ -8,7 +8,10 @@ use super::OperationResult;
 impl MediaContainer {
     pub fn reverse(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let out = if !input.is_encoded_video() {
+        let out = if let Some(input) = input.try_encoded_video() {
+            let out = ffmpeg_operations::reverse_video(input)?;
+            MediaObject::Encoded(out)
+        } else {
             let input = input.to_dynamic_images(self.frame_limit)?;
             if input.images.len() == 1 {
                 return Err(FluxError::InputImageError(
@@ -25,9 +28,6 @@ impl MediaContainer {
                 audio,
                 repeat,
             })
-        } else {
-            let out = ffmpeg_operations::reverse_video(input.unwrap_encoded())?;
-            MediaObject::Encoded(out)
         };
 
         Ok(out)

@@ -19,3 +19,8 @@ pub fn convert_frames_to_dynamic_images(frames: Vec<Frame>) -> Vec<DynamicImageW
 
     images
 }
+
+pub fn framebuffer_to_dyn_image(w: u32, h: u32, f: Vec<u8>) -> DynamicImage {
+    let imagebuffer = image::RgbaImage::from_vec(w, h, f).unwrap();
+    DynamicImage::ImageRgba8(imagebuffer)
+}

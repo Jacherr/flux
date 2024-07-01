@@ -20,12 +20,16 @@ impl MediaObject {
         }
     }
 
-    pub fn is_encoded_video(&self) -> bool {
+    pub fn try_encoded_video(&self) -> Option<&[u8]> {
         match self {
-            Self::DynamicImages(_) => false,
+            Self::DynamicImages(_) => None,
             Self::Encoded(enc) => {
                 let ty = get_sig_incl_mp4(enc);
-                ty.is_some_and(|ty| ty == Type::Mp4 || ty == Type::Webm)
+                if ty.is_some_and(|ty| ty == Type::Mp4 || ty == Type::Webm) {
+                    Some(enc)
+                } else {
+                    None
+                }
             },
         }
     }

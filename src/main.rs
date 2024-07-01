@@ -11,6 +11,7 @@
 )]
 
 use core::flux::{Flux, StepAction};
+use std::process::ExitCode;
 
 use anyhow::Context;
 use time::format_description;
@@ -23,7 +24,7 @@ pub mod processing;
 pub mod util;
 pub mod vips;
 
-fn main() {
+fn main() -> ExitCode {
     let filter = EnvFilter::from_default_env();
 
     let description = "[year]-[month]-[day] [hour]:[minute]:[second]";
@@ -43,12 +44,12 @@ fn main() {
         match state {
             Ok(s) => {
                 if s == StepAction::OutputWritten {
-                    break;
+                    break ExitCode::SUCCESS;
                 }
             },
             Err(e) => {
                 eprintln!("{e:#}");
-                break;
+                break ExitCode::FAILURE;
             },
         }
     }

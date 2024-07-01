@@ -492,7 +492,7 @@ pub fn get_video_frame_count(input: &[u8]) -> Result<usize, FluxError> {
 
     let output = command.wait_with_output()?;
     let count = String::from_utf8_lossy(&output.stdout).to_string();
-    println!("{}", count.trim());
+
     let count = count
         .trim()
         .parse::<usize>()
@@ -527,6 +527,11 @@ pub mod ffmpeg_operations {
 
     pub fn flip_video(input: &[u8]) -> Result<Vec<u8>, FluxError> {
         run_ffmpeg_command(&["-vf", "vflip", "-c:a", "copy", "-f", "mp4"], &[], input)
+    }
+
+    /// MUST take even values
+    pub fn resize_video(input: &[u8], w: usize, h: usize) -> Result<Vec<u8>, FluxError> {
+        run_ffmpeg_command(&["-s", &format!("{w}x{h}"), "-c:a", "copy", "-f", "mp4"], &[], input)
     }
 
     pub fn grayscale_video(input: &[u8]) -> Result<Vec<u8>, FluxError> {
