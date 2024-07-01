@@ -1,3 +1,7 @@
+use std::convert::Infallible;
+use std::num::ParseFloatError;
+use std::ops::FromResidual;
+
 use image::ImageError;
 use thiserror::Error;
 
@@ -45,5 +49,23 @@ impl From<ImageError> for FluxError {
             ImageError::Decoding(e) => FluxError::CorruptInput(e.to_string()),
             otherwise => FluxError::ScriptError(otherwise.to_string()),
         }
+    }
+}
+
+impl From<ParseFloatError> for FluxError {
+    fn from(value: ParseFloatError) -> Self {
+        Self::ParameterError(value.to_string())
+    }
+}
+
+impl FromResidual<Result<Infallible, anyhow::Error>> for FluxError {
+    fn from_residual(residual: Result<Infallible, anyhow::Error>) -> Self {
+        Self::Other(residual.unwrap_err().to_string())
+    }
+}
+
+impl From<anyhow::Error> for FluxError {
+    fn from(value: anyhow::Error) -> Self {
+        Self::Other(value.to_string())
     }
 }

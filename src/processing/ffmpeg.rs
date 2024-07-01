@@ -66,7 +66,7 @@ pub fn ah_shit(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
     run_ffmpeg_command(
         &[
             "-i",
-            "../subproc/assets/video/ahshit.mp4",
+            "./assets/video/ahshit.mp4",
             "-filter_complex",
             "[0]scale=1280:720,setdar=16/9,zoompan=z='zoom+0.001':x='if(gte(zoom,1.5),x,x-1)':y='y':d=76[zoom];[1]colorkey=0x00FF00:similarity=0.45:blend=0.0[shit];[zoom][shit]overlay",
             "-shortest",
@@ -84,7 +84,7 @@ pub fn april_fools(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
             "-r",
             "30",
             "-i",
-            "../subproc/assets/video/april.mp4",
+            "./assets/video/april.mp4",
             "-filter_complex",
             "[0]scale=480:480,setdar=1[img];[1]setdar=1[vid];[img][vid]concat",
             "-movflags",

@@ -1,11 +1,10 @@
-use std::collections::HashMap;
 use std::time::Instant;
 
 use tracing::debug;
 
+use crate::core::args::ArgsHandler;
 use crate::core::error::{ArgError, FluxError};
 use crate::core::input_queue::InputQueue;
-
 use crate::processing::media_object::MediaObject;
 
 /// Main media container for Flux. Contains everything needed to process a range of input formats by
@@ -38,61 +37,16 @@ impl MediaContainer {
             .ok_or(FluxError::Args(ArgError::ArgsExhausted))
     }
 
-    /// Parse format: operation[x=1:y=2:z=whatever]
-    fn parse_operation_name(operation: &str) -> Result<(String, HashMap<String, String>), FluxError> {
-        if operation.contains("[") && operation.chars().next() != Some('[') {
-            if !operation.ends_with("]") {
-                return Err(FluxError::Args(ArgError::FlagOptionParseError(format!(
-                    "Flag options missing termination for {}",
-                    operation
-                ))));
-            }
-
-            let options_start = operation.find("[").unwrap();
-            let name = &operation[..options_start];
-            let options = operation[options_start + 1..operation.len() - 1].split(":");
-
-            let mut parsed_options = HashMap::new();
-            for option in options {
-                let split = option
-                    .split_once("=")
-                    .ok_or(FluxError::Args(ArgError::FlagOptionParseError(format!(
-                        "Option \"{option}\" has a key, but no value"
-                    ))))?;
-
-                if split.0.is_empty() {
-                    return Err(FluxError::Args(ArgError::FlagOptionParseError(
-                        "Option key cannot be blank".to_owned(),
-                    )));
-                } else if split.1.is_empty() {
-                    return Err(FluxError::Args(ArgError::FlagOptionParseError(format!(
-                        "Option \"{option}\" has a key, but no value"
-                    ))));
-                }
-
-                parsed_options.insert(split.0.to_owned(), split.1.to_owned());
-            }
-
-            Ok((name.to_owned(), parsed_options))
-        } else {
-            Ok((operation.to_owned(), HashMap::new()))
-        }
-    }
-
     /// Handles a new operation. When the operation (successfully) completes, the result of the
     /// operation will be pushed to the input queue.\
     /// To get the output of this operation, call `get_output`. This will pop the input queue and
     /// encode the data (if necessary).
     pub fn handle_operation(&self, operation: String) -> Result<(), FluxError> {
-        let parsed = MediaContainer::parse_operation_name(&operation)?;
+        let parsed = ArgsHandler::parse_operation_name(&operation)?;
         debug!("Performing operation {operation}");
         let start = Instant::now();
 
-        let result = match &parsed.0[..] {
-            "reverse" => self.reverse()?,
-            "blur" => self.blur(None)?,
-            _ => unimplemented!(),
-        };
+        let result = self.perform_operation(&parsed.0, parsed.1)?;
 
         debug!("Operation {operation}: took {:?}", start.elapsed());
         self.push_input(result);

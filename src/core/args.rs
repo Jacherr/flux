@@ -1,8 +1,12 @@
+use core::slice;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::env::Args;
+use std::iter::Peekable;
 use std::rc::Rc;
+use std::str::Chars;
 
-use super::error::ArgError;
+use super::error::{ArgError, FluxError};
 
 mod flag {
     use std::cell::LazyCell;
@@ -103,5 +107,84 @@ impl ArgsHandler {
             args: self.args.clone(),
             meta: self.meta.clone(),
         }
+    }
+
+    /// Parse format: operation[x=1:y=2:z=whatever]
+    pub fn parse_operation_name(operation: &str) -> Result<(String, HashMap<String, String>), FluxError> {
+        if operation.contains("[") && operation.chars().last() != Some('[') {
+            if !operation.ends_with("]") {
+                return Err(FluxError::Args(ArgError::FlagOptionParseError(format!(
+                    "Flag options missing termination for {}",
+                    operation
+                ))));
+            }
+
+            let options_start = operation.find("[").unwrap();
+            let name = &operation[..options_start];
+            let options = OperationOptions::new(&operation[options_start + 1..operation.len() - 1]);
+
+            let mut parsed_options = HashMap::new();
+            for option in options {
+                let split = option
+                    .split_once("=")
+                    .ok_or(FluxError::Args(ArgError::FlagOptionParseError(format!(
+                        "Option \"{option}\" has a key, but no value"
+                    ))))?;
+
+                if split.0.is_empty() {
+                    return Err(FluxError::Args(ArgError::FlagOptionParseError(
+                        "Option key cannot be blank".to_owned(),
+                    )));
+                } else if split.1.is_empty() {
+                    return Err(FluxError::Args(ArgError::FlagOptionParseError(format!(
+                        "Option \"{option}\" has a key, but no value"
+                    ))));
+                }
+
+                println!("{}", split.1);
+                parsed_options.insert(split.0.to_owned(), split.1.to_owned());
+            }
+
+            Ok((name.to_owned(), parsed_options))
+        } else {
+            Ok((operation.to_owned(), HashMap::new()))
+        }
+    }
+}
+
+struct OperationOptions<'a> {
+    iter: Peekable<Chars<'a>>,
+}
+impl<'a> OperationOptions<'a> {
+    pub fn new(src: &'a str) -> Self {
+        Self {
+            iter: src.chars().peekable(),
+        }
+    }
+}
+impl Iterator for OperationOptions<'_> {
+    type Item = String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.iter.peek().is_none() {
+            return None;
+        }
+
+        let mut current = String::new();
+
+        while let Some(next) = self.iter.next() {
+            if next == ';' {
+                let prev = &current.chars().last();
+                if prev == &Some('\\') {
+                    current = current[..current.len() - 1].to_owned();
+                } else {
+                    break;
+                }
+            }
+
+            current.push(next);
+        }
+
+        Some(current)
     }
 }

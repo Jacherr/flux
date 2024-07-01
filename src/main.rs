@@ -4,7 +4,10 @@
     const_slice_from_raw_parts_mut,
     const_mut_refs,
     core_intrinsics,
-    const_fn_floating_point_arithmetic
+    const_fn_floating_point_arithmetic,
+    try_trait_v2,
+    let_chains,
+    exact_size_is_empty
 )]
 
 use core::flux::{Flux, StepAction};
