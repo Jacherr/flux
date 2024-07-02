@@ -1,3 +1,4 @@
+use std::env;
 use std::process::Command;
 
 fn main() {
@@ -7,9 +8,10 @@ fn main() {
     const C_FILES: &[&str] = &["v_text.c", "v_vips_util.c", "v_conversion.c"];
 
     let _ = std::fs::create_dir(&format!("./{}", OUT_DIR));
+    let workspace = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    println!("cargo:rustc-link-search=native=./{}", OUT_DIR);
-    println!("cargo:rustc-env=LD_LIBRARY_PATH=./{}", OUT_DIR);
+    println!("cargo:rustc-link-search=native={}/{}", workspace, OUT_DIR);
+    println!("cargo:rustc-env=LD_LIBRARY_PATH={}/{}", workspace, OUT_DIR);
 
     for file in C_FILES {
         Command::new("bash")
