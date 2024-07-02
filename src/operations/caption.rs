@@ -21,7 +21,7 @@ impl MediaContainer {
 
             Ok(MediaObject::Encoded(res))
         } else {
-            let mut x = input.to_dynamic_images(self.frame_limit)?.into_owned();
+            let mut x = input.to_dynamic_images(&self.limits)?.into_owned();
             let (w, h) = x.images.first().unwrap().0.dimensions();
             let text = vips_generate_caption(text, w as usize)?;
 

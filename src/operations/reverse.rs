@@ -12,7 +12,7 @@ impl MediaContainer {
             let out = ffmpeg_operations::reverse_video(input)?;
             MediaObject::Encoded(out)
         } else {
-            let input = input.to_dynamic_images(self.frame_limit)?;
+            let input = input.to_dynamic_images(&self.limits)?;
             if input.images.len() == 1 {
                 return Err(FluxError::InputImageError(
                     "Reversing images requires more than one frame".to_string(),

@@ -5,6 +5,7 @@ use std::hash::{Hash, Hasher};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 use std::thread::spawn;
+use std::time::Duration;
 
 use image::{load_from_memory, DynamicImage};
 use rand::distributions::Alphanumeric;
@@ -12,6 +13,7 @@ use rand::{thread_rng, Rng};
 
 use super::filetype::{get_sig, Type};
 use crate::core::error::FluxError;
+use crate::core::media_container::DecodeLimits;
 use crate::util::owned_child::IntoOwnedChild;
 use crate::util::{hash_buffer, pad_left};
 
@@ -252,7 +254,14 @@ pub fn terraria(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
     )
 }
 
-pub fn video_to_dynamic_images(input: &[u8]) -> Result<Vec<DynamicImage>, FluxError> {
+pub fn video_to_dynamic_images(input: &[u8], limits: &DecodeLimits) -> Result<Vec<DynamicImage>, FluxError> {
+    let time_limit = limits
+        .video_time_limit
+        .unwrap_or(Duration::from_secs(45))
+        .as_secs()
+        .to_string();
+    let fps_limit = format!("fps={}", limits.frame_rate_limit.unwrap_or(20));
+
     let cpus = num_cpus::get().to_string();
 
     let folder_name = hash_buffer(input);
@@ -264,8 +273,8 @@ pub fn video_to_dynamic_images(input: &[u8]) -> Result<Vec<DynamicImage>, FluxEr
     let out_path = format!("/tmp/{}/out%05d.bmp", folder_name);
 
     let mut args = Vec::from(["-y", "-hide_banner", "-loglevel", "error"]);
-    args.extend_from_slice(&["-t", "45", "-i", &in_path, "-threads", &cpus]);
-    args.extend_from_slice(&["-vf", "fps=20"]);
+    args.extend_from_slice(&["-t", &time_limit, "-i", &in_path, "-threads", &cpus]);
+    args.extend_from_slice(&["-vf", &fps_limit]);
     args.push(&out_path);
 
     let command = Command::new("ffmpeg")
@@ -312,13 +321,13 @@ pub fn video_to_dynamic_images(input: &[u8]) -> Result<Vec<DynamicImage>, FluxEr
     Ok(images)
 }
 
-pub fn split_video(input: &[u8]) -> Result<(Vec<DynamicImage>, Vec<u8>), FluxError> {
+pub fn split_video(input: &[u8], limits: DecodeLimits) -> Result<(Vec<DynamicImage>, Vec<u8>), FluxError> {
     let boxed = Box::<[u8]>::from(input);
     let arced = Arc::<[u8]>::from(boxed);
     let arced_clone = arced.clone();
 
     let audio_task = spawn(move || run_ffmpeg_command(&["-f", "mp3"], &[], &arced));
-    let video_task = spawn(move || video_to_dynamic_images(&arced_clone));
+    let video_task = spawn(move || video_to_dynamic_images(&arced_clone, &limits));
 
     let imgs = video_task.join().unwrap()?;
     let audio = audio_task

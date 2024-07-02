@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
 use crate::core::error::FluxError;
+use crate::core::media_container::DecodeLimits;
 use crate::processing::decode::dynamic_images::decode_to_dynamic_images;
 use crate::processing::encode::encode_object;
 use crate::processing::filetype::{get_sig_incl_mp4, Type};
@@ -13,10 +14,10 @@ pub enum MediaObject {
     DynamicImages(DynamicImagesMediaObject),
 }
 impl MediaObject {
-    pub fn to_dynamic_images(&self, frame_limit: Option<u64>) -> Result<Cow<DynamicImagesMediaObject>, FluxError> {
+    pub fn to_dynamic_images(&self, limits: &DecodeLimits) -> Result<Cow<DynamicImagesMediaObject>, FluxError> {
         match self {
             Self::DynamicImages(x) => Ok(Cow::Borrowed(x)),
-            Self::Encoded(e) => Ok(Cow::Owned(decode_to_dynamic_images(e, frame_limit)?)),
+            Self::Encoded(e) => Ok(Cow::Owned(decode_to_dynamic_images(e, limits)?)),
         }
     }
 

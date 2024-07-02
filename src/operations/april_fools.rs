@@ -1,5 +1,4 @@
 use image::codecs::gif::Repeat;
-use image::imageops::FilterType;
 use image::load_from_memory;
 
 use crate::core::media_container::MediaContainer;
@@ -15,7 +14,7 @@ impl MediaContainer {
         let first = if let Some(v) = input.try_encoded_video() {
             DynamicImageWrapper::new(load_from_memory(&get_video_first_frame(v)?)?, None)
         } else {
-            input.to_dynamic_images(self.frame_limit)?.into_owned().images[0].clone()
+            input.to_dynamic_images(&self.limits)?.into_owned().images[0].clone()
         };
 
         let image = MediaObject::DynamicImages(DynamicImagesMediaObject {

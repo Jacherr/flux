@@ -16,6 +16,8 @@ mod flag {
 
     pub const FLAG_OPERATION: &'static str = "operation";
     pub const FLAG_INPUT: &'static str = "input";
+    pub const FLAG_IMAGE_PAGE_LIMIT: &'static str = "page-limit";
+    pub const FLAG_INPUT_RESOLUTION_LIMIT: &'static str = "res-limit";
 
     pub const FLAG_MAPPER: LazyCell<HashMap<&'static str, &'static str>> = LazyCell::new(|| {
         let mut h = HashMap::new();
@@ -31,6 +33,8 @@ pub enum ArgType {
     InputPath(String),
     Operation(String),
     OutputPath(String),
+    ImagePageLimit(u64),
+    InputResolutionLimit((u64, u64)),
 }
 
 /// Internal metadata and stateful information used by the argument parser.
@@ -95,6 +99,44 @@ impl ArgsHandler {
             flag::FLAG_INPUT => {
                 let input = self.args.borrow_mut().next().ok_or(ArgError::ArgsExhausted)?;
                 Ok(ArgType::InputPath(input))
+            },
+            flag::FLAG_IMAGE_PAGE_LIMIT => {
+                let limit = self.args.borrow_mut().next().ok_or(ArgError::ArgsExhausted)?;
+                let limit = limit.parse::<u64>().map_err(|e| {
+                    ArgError::FlagOptionParseError(format!("Invalid page cap value {limit}: {}", e.to_string()))
+                })?;
+                Ok(ArgType::ImagePageLimit(limit))
+            },
+            flag::FLAG_INPUT_RESOLUTION_LIMIT => {
+                let limit = self.args.borrow_mut().next().ok_or(ArgError::ArgsExhausted)?;
+                let split = limit.split("x").collect::<Vec<&str>>();
+                let width = split
+                    .get(0)
+                    .ok_or(ArgError::FlagOptionParseError(format!(
+                        "Invalid argument for resolution limit: missing width"
+                    )))?
+                    .parse::<u64>()
+                    .map_err(|e| {
+                        ArgError::FlagOptionParseError(format!(
+                            "Invalid argument for resolution limit: Invalid width: {}",
+                            e.to_string()
+                        ))
+                    })?;
+
+                let height = split
+                    .get(1)
+                    .ok_or(ArgError::FlagOptionParseError(format!(
+                        "Invalid argument for resolution limit: missing height"
+                    )))?
+                    .parse::<u64>()
+                    .map_err(|e| {
+                        ArgError::FlagOptionParseError(format!(
+                            "Invalid argument for resolution limit: Invalid height: {}",
+                            e.to_string()
+                        ))
+                    })?;
+
+                Ok(ArgType::InputResolutionLimit((width, height)))
             },
             _ => Err(ArgError::UnrecognisedFlag(flag.to_owned())),
         }

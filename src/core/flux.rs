@@ -75,6 +75,12 @@ impl Flux {
                 write(output, encoded)?;
                 self.previous_action = Some(StepAction::OutputWritten);
             },
+            ArgType::ImagePageLimit(lim) => {
+                self.media_container.limits.frame_limit = Some(lim);
+            },
+            ArgType::InputResolutionLimit((w, h)) => {
+                self.media_container.limits.resolution_limit = Some((w, h));
+            },
         }
 
         Ok(self.previous_action.clone().unwrap())

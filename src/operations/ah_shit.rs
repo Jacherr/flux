@@ -9,7 +9,7 @@ use super::OperationResult;
 impl MediaContainer {
     pub fn ah_shit(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let mut dyn_images = input.to_dynamic_images(self.frame_limit)?.into_owned();
+        let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
 
         // resize to fit
         dyn_images.iter_images_mut(|f, _| f.resize(1280, 720, FilterType::Gaussian));

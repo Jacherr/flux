@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use tracing::debug;
 
@@ -6,6 +6,14 @@ use crate::core::args::ArgsHandler;
 use crate::core::error::{ArgError, FluxError};
 use crate::core::input_queue::InputQueue;
 use crate::processing::media_object::MediaObject;
+
+#[derive(Default, Clone)]
+pub struct DecodeLimits {
+    pub frame_limit: Option<u64>,
+    pub frame_rate_limit: Option<u64>,
+    pub video_time_limit: Option<Duration>,
+    pub resolution_limit: Option<(u64, u64)>,
+}
 
 /// Main media container for Flux. Contains everything needed to process a range of input formats by
 /// splitting it down to its base components.\ These base components are typically a 2D Vec of
@@ -17,13 +25,13 @@ use crate::processing::media_object::MediaObject;
 /// the result of the previous operation!**
 pub struct MediaContainer {
     input_queue: InputQueue,
-    pub frame_limit: Option<u64>,
+    pub limits: DecodeLimits,
 }
 impl MediaContainer {
     pub fn new() -> Self {
         Self {
             input_queue: InputQueue::new(),
-            frame_limit: None,
+            limits: DecodeLimits::default(),
         }
     }
 
