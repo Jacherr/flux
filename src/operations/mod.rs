@@ -10,6 +10,8 @@ use crate::processing::media_object::MediaObject;
 
 pub mod ah_shit;
 pub mod april_fools;
+pub mod back_tattoo;
+pub mod billboard;
 pub mod bloom;
 pub mod blur;
 pub mod caption;
@@ -65,6 +67,8 @@ impl MediaContainer {
 
                 self.bloom(bloom_options)?
             },
+            "back-tattoo" => self.back_tattoo()?,
+            "billboard" => self.billboard()?,
             "blur" => {
                 let strength = option_get_f32(&options, "strength")?;
 

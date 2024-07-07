@@ -1211,16 +1211,13 @@ pub mod ops {
             (k, a1, a2, a3, b1, b2, lc, rc): (f32, f32, f32, f32, f32, f32, f32, f32),
         ) {
             use std::intrinsics::{fadd_fast as fa, float_to_int_unchecked as fi, fmul_fast as fm};
-
             let width4 = 4 * width;
             let height4 = 4 * height;
             let hw1 = height * (width - 1);
-
             for y in 0..height {
                 let mut toffset = 0;
                 let mut ooffset = y * width4;
                 let mut offset = 4 * (y + hw1);
-
                 let (mut por, mut pog, mut pob, mut poa) = (
                     *o8.add(ooffset) as f32,
                     *o8.add(1 + ooffset) as f32,
@@ -1229,7 +1226,6 @@ pub mod ops {
                 );
                 let (mut fur, mut fug, mut fub, mut fua) = (fm(lc, por), fm(lc, pog), fm(lc, pob), fm(lc, poa));
                 let (mut tur, mut tug, mut tub, mut tua) = (fur, fug, fub, fua);
-
                 for _ in 0..width {
                     let (cor, cog, cob, coa) = (
                         *o8.add(ooffset) as f32,
@@ -1243,11 +1239,9 @@ pub mod ops {
                         fm(k, cob) + fm(a1, pob) + fm(b1, fub) + fm(b2, tub),
                         fm(k, coa) + fm(a1, poa) + fm(b1, fua) + fm(b2, tua),
                     );
-
                     (tur, tug, tub, tua) = (fur, fug, fub, fua);
                     (fur, fug, fub, fua) = (cur, cug, cub, cua);
                     (por, pog, pob, poa) = (cor, cog, cob, coa);
-
                     *f32.offset(toffset) = fur;
                     *f32.offset(1 + toffset) = fug;
                     *f32.offset(2 + toffset) = fub;
@@ -1256,19 +1250,15 @@ pub mod ops {
                     ooffset += 4;
                     toffset += 4;
                 }
-
                 ooffset -= 4;
                 toffset -= 4;
-
                 por = *o8.add(ooffset) as f32;
                 pog = *o8.add(1 + ooffset) as f32;
                 pob = *o8.add(2 + ooffset) as f32;
                 poa = *o8.add(3 + ooffset) as f32;
                 (tur, tug, tub, tua) = (fm(rc, por), fm(rc, pog), fm(rc, pob), fm(rc, poa));
-
                 (fur, fug, fub, fua) = (tur, tug, tub, tua);
                 let (mut cor, mut cog, mut cob, mut coa) = (por, pog, pob, poa);
-
                 for _ in 0..width {
                     let (cur, cug, cub, cua) = (
                         fm(a2, cor) + fm(a3, por) + fm(b1, fur) + fm(b2, tur),
@@ -1276,11 +1266,9 @@ pub mod ops {
                         fm(a2, cob) + fm(a3, pob) + fm(b1, fub) + fm(b2, tub),
                         fm(a2, coa) + fm(a3, poa) + fm(b1, fua) + fm(b2, tua),
                     );
-
                     (tur, tug, tub, tua) = (fur, fug, fub, fua);
                     (fur, fug, fub, fua) = (cur, cug, cub, cua);
                     (por, pog, pob, poa) = (cor, cog, cob, coa);
-
                     cor = *o8.add(ooffset) as f32;
                     cog = *o8.add(1 + ooffset) as f32;
                     cob = *o8.add(2 + ooffset) as f32;
@@ -1289,7 +1277,6 @@ pub mod ops {
                     *u8.add(1 + offset) = fi(fa(fug, *f32.offset(1 + toffset)));
                     *u8.add(2 + offset) = fi(fa(fub, *f32.offset(2 + toffset)));
                     *u8.add(3 + offset) = fi(fa(fua, *f32.offset(3 + toffset)));
-
                     ooffset = ooffset.saturating_sub(4);
                     toffset = toffset.saturating_sub(4);
                     offset = offset.saturating_sub(height4);
