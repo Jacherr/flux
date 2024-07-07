@@ -1,0 +1,3 @@
+[submodule "makesweet"]
+	path = makesweet
+	url = git@github.com:Jacherr/makesweet.git

@@ -1,15 +1,19 @@
+use std::io::Cursor;
 use std::time::Duration;
 
 use image::codecs::png::PngEncoder;
-use image::{Delay, ExtendedColorType, ImageEncoder};
+use image::{load_from_memory, Delay, ExtendedColorType, ImageEncoder, ImageFormat};
 
 use crate::core::error::FluxError;
-use crate::processing::ffmpeg::create_video_from_split;
+use crate::core::media_container::DecodeLimits;
+use crate::processing::decode::dynamic_images::decode_to_dynamic_images;
+use crate::processing::ffmpeg::{self, create_video_from_split};
+use crate::processing::filetype::{get_sig_incl_mp4, Type};
 use crate::processing::media_object::MediaObject;
 
 pub mod gif;
 
-pub fn encode_object(obj: MediaObject) -> Result<Vec<u8>, FluxError> {
+pub fn encode_auto(obj: MediaObject) -> Result<Vec<u8>, FluxError> {
     let encoded = match obj {
         MediaObject::DynamicImages(image_object) => {
             // we determine filetype to encode to either based on extension on filename provided, or
@@ -57,4 +61,61 @@ pub fn encode_object(obj: MediaObject) -> Result<Vec<u8>, FluxError> {
     };
 
     Ok(encoded?)
+}
+
+pub fn encode_object(obj: MediaObject, format: Option<ImageFormat>) -> Result<Vec<u8>, FluxError> {
+    if let Some(_f) = format {
+        todo!()
+    } else {
+        encode_auto(obj)
+    }
+}
+
+pub fn encode_first_frame_as(
+    obj: MediaObject,
+    format: ImageFormat,
+    limits: &DecodeLimits,
+) -> Result<Vec<u8>, FluxError> {
+    let encoded = match obj {
+        MediaObject::DynamicImages(image_object) => {
+            let frame_1 = image_object
+                .images
+                .first()
+                .map(|x| &x.0)
+                .ok_or(FluxError::Other("No images in sequence to encode".to_owned()))?;
+
+            let mut out = Vec::new();
+            frame_1.write_to(&mut Cursor::new(&mut out), format)?;
+
+            out
+        },
+        MediaObject::Encoded(enc) => {
+            let enc_format = get_sig_incl_mp4(&enc).ok_or(FluxError::UnsupportedFiletype)?;
+            match enc_format {
+                Type::Jpeg | Type::Png | Type::Gif | Type::Webp => {
+                    let dyn_images = decode_to_dynamic_images(&enc, limits)?;
+                    let frame_1 = dyn_images
+                        .images
+                        .first()
+                        .map(|x| &x.0)
+                        .ok_or(FluxError::Other("No images in sequence to encode".to_owned()))?;
+
+                    let mut out = Vec::new();
+                    frame_1.write_to(&mut Cursor::new(&mut out), format)?;
+
+                    out
+                },
+                Type::Mp4 | Type::Webm => {
+                    let first_frame_png = ffmpeg::get_video_first_frame(&enc)?;
+                    let dyn_image = load_from_memory(&first_frame_png)?;
+                    let mut out = Vec::new();
+                    dyn_image.write_to(&mut Cursor::new(&mut out), format)?;
+
+                    out
+                },
+            }
+        },
+    };
+
+    Ok(encoded)
 }

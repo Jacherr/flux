@@ -8,6 +8,9 @@ use crate::processing::filetype::{get_sig_incl_mp4, Type};
 
 pub mod dynamic_images;
 pub use dynamic_images::DynamicImagesMediaObject;
+use image::ImageFormat;
+
+use super::encode::encode_first_frame_as;
 
 pub enum MediaObject {
     Encoded(Vec<u8>),
@@ -35,11 +38,29 @@ impl MediaObject {
         }
     }
 
+    pub fn is_encoded_video(&self) -> bool {
+        match self {
+            Self::DynamicImages(_) => false,
+            Self::Encoded(enc) => {
+                let ty = get_sig_incl_mp4(enc);
+                if ty.is_some_and(|ty| ty == Type::Mp4 || ty == Type::Webm) {
+                    true
+                } else {
+                    false
+                }
+            },
+        }
+    }
+
     pub fn unwrap_encoded(&self) -> &[u8] {
         if let Self::Encoded(x) = self { x } else { unreachable!() }
     }
 
     pub fn encode(self) -> Result<Vec<u8>, FluxError> {
-        encode_object(self)
+        encode_object(self, None)
+    }
+
+    pub fn encode_first_frame_as(self, format: ImageFormat, limits: &DecodeLimits) -> Result<Vec<u8>, FluxError> {
+        encode_first_frame_as(self, format, limits)
     }
 }

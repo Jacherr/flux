@@ -31,8 +31,8 @@ pub enum FluxError {
     ParameterError(String),
     #[error("{0} residual images after encoding")]
     ResidualImages(u64),
-    #[error("Error with input image: {0}")]
-    InputImageError(String),
+    #[error("Error with input media: {0}")]
+    InputMediaError(String),
     #[error("Error: {0}")]
     Other(String),
 }
@@ -60,12 +60,12 @@ impl From<ParseFloatError> for FluxError {
 
 impl FromResidual<Result<Infallible, anyhow::Error>> for FluxError {
     fn from_residual(residual: Result<Infallible, anyhow::Error>) -> Self {
-        Self::Other(residual.unwrap_err().to_string())
+        Self::Other(format!("{:#}", residual.unwrap_err()))
     }
 }
 
 impl From<anyhow::Error> for FluxError {
     fn from(value: anyhow::Error) -> Self {
-        Self::Other(value.to_string())
+        Self::Other(format!("{:#}", value))
     }
 }

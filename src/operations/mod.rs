@@ -13,6 +13,7 @@ pub mod april_fools;
 pub mod bloom;
 pub mod blur;
 pub mod caption;
+pub mod flag;
 pub mod resize;
 pub mod reverse;
 
@@ -76,6 +77,7 @@ impl MediaContainer {
 
                 self.caption(&text[..])?
             },
+            "flag" => self.flag()?,
             "resize" => {
                 let width = option_get_usize(&options, "width")?;
                 let height = option_get_usize(&options, "height")?;

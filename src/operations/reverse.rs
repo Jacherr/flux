@@ -14,7 +14,7 @@ impl MediaContainer {
         } else {
             let input = input.to_dynamic_images(&self.limits)?;
             if input.images.len() == 1 {
-                return Err(FluxError::InputImageError(
+                return Err(FluxError::InputMediaError(
                     "Reversing images requires more than one frame".to_string(),
                 ));
             }

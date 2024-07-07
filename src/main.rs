@@ -7,13 +7,16 @@
     const_fn_floating_point_arithmetic,
     try_trait_v2,
     let_chains,
-    exact_size_is_empty
+    exitcode_exit_method
 )]
 
 use core::flux::{Flux, StepAction};
-use std::process::ExitCode;
+use std::process::{Command, ExitCode};
+use std::thread;
 
 use anyhow::Context;
+use signal_hook::consts::SIGTERM;
+use signal_hook::iterator::Signals;
 use time::format_description;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::EnvFilter;
@@ -37,6 +40,23 @@ fn main() -> ExitCode {
 
     let args = std::env::args();
     let mut flux = Flux::new(args);
+
+    // handle SIGTERM for graceful shutdown of child processes (e.g. ffmpeg)
+    let mut signals = Signals::new(&[SIGTERM]).unwrap();
+    thread::spawn(move || {
+        for sig in signals.forever() {
+            if sig == SIGTERM {
+                let mut cmd = Command::new("pkill");
+                cmd.arg("$$");
+                let o = cmd.output();
+                if let Err(e) = o {
+                    eprintln!("flux: graceful shutdown failed: {}", e.to_string());
+                    ExitCode::FAILURE.exit_process();
+                }
+                ExitCode::SUCCESS.exit_process();
+            }
+        }
+    });
 
     loop {
         let state = flux.step().context("Failed to process step");

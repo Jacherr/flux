@@ -7,5 +7,6 @@ pub mod filetype;
 pub mod framebuffer;
 pub mod gegl;
 pub mod gif;
+pub mod makesweet;
 pub mod media_object;
 pub mod type_conversion;
