@@ -68,17 +68,57 @@ pub fn run_makesweet(images: &[&[u8]], operation: &str) -> Result<Vec<u8>, FluxE
     }
 }
 
-/// Image bust be of format JPEG
-pub fn flag(image: &[u8]) -> Result<Vec<u8>, FluxError> {
-    run_makesweet(&[image], "flag")
+/// Image must be of format JPEG
+pub fn back_tattoo(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "back-tattoo")
 }
 
-/// Image bust be of format JPEG
+/// Image must be of format JPEG
 pub fn billboard_cityscape(image: &[u8]) -> Result<Vec<u8>, FluxError> {
     run_makesweet(&[image], "billboard-cityscape")
 }
 
-/// Image bust be of format JPEG
-pub fn back_tattoo(image: &[u8]) -> Result<Vec<u8>, FluxError> {
-    run_makesweet(&[image], "back-tattoo")
+/// Image must be of format JPEG
+pub fn book(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "book")
+}
+
+/// Image must be of format JPEG
+pub fn circuitboard(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "circuitboard")
+}
+
+/// Image must be of format JPEG
+pub fn fortune_cookie(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "fortune-cookie")
+}
+
+/// Image must be of format JPEG
+pub fn heart_locket(image1: &[u8], image2: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image1, image2], "heart-locket")
+}
+
+/// Image must be of format JPEG
+pub fn flag(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "flag")
+}
+
+/// Image must be of format JPEG
+pub fn flag2(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "flag2")
+}
+
+/// Image must be of format JPEG
+pub fn rubiks(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "rubiks")
+}
+
+/// Image must be of format JPEG
+pub fn toaster(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "toaster")
+}
+
+/// Image must be of format JPEG
+pub fn valentine(image: &[u8]) -> Result<Vec<u8>, FluxError> {
+    run_makesweet(&[image], "valentine")
 }

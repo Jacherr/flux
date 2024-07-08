@@ -10,12 +10,10 @@ use crate::processing::media_object::MediaObject;
 
 pub mod ah_shit;
 pub mod april_fools;
-pub mod back_tattoo;
-pub mod billboard;
 pub mod bloom;
 pub mod blur;
 pub mod caption;
-pub mod flag;
+pub mod makesweet;
 pub mod resize;
 pub mod reverse;
 
@@ -74,6 +72,7 @@ impl MediaContainer {
 
                 self.blur(strength)?
             },
+            "book" => self.book()?,
             "caption" => {
                 let text = options.get("text").ok_or(FluxError::ParameterError(
                     "Missing required option text for operation caption".to_owned(),
@@ -81,7 +80,10 @@ impl MediaContainer {
 
                 self.caption(&text[..])?
             },
+            "circuitboard" => self.circuitboard()?,
             "flag" => self.flag()?,
+            "flag2" => self.flag2()?,
+            "fortune-cookie" => self.fortune_cookie()?,
             "resize" => {
                 let width = option_get_usize(&options, "width")?;
                 let height = option_get_usize(&options, "height")?;
@@ -92,7 +94,10 @@ impl MediaContainer {
                 self.resize(resize_options)?
             },
             "reverse" => self.reverse()?,
-            _ => unimplemented!(),
+            "rubiks" => self.rubiks()?,
+            "toaster" => self.toaster()?,
+            "valentine" => self.valentine()?,
+            _ => Err(FluxError::ParameterError(format!("Unrecognised operation {operation}")))?,
         })
     }
 }
