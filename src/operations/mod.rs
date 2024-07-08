@@ -52,6 +52,8 @@ impl MediaContainer {
         Ok(match operation {
             "ah-shit" => self.ah_shit()?,
             "april-fools" => self.april_fools()?,
+            "back-tattoo" => self.back_tattoo()?,
+            "billboard" => self.billboard()?,
             "bloom" => {
                 let radius = option_get_usize(&options, "radius")?;
                 let brightness = option_get_usize(&options, "brightness")?;
@@ -65,8 +67,6 @@ impl MediaContainer {
 
                 self.bloom(bloom_options)?
             },
-            "back-tattoo" => self.back_tattoo()?,
-            "billboard" => self.billboard()?,
             "blur" => {
                 let strength = option_get_f32(&options, "strength")?;
 
@@ -84,6 +84,11 @@ impl MediaContainer {
             "flag" => self.flag()?,
             "flag2" => self.flag2()?,
             "fortune-cookie" => self.fortune_cookie()?,
+            "heart-locket" => {
+                let text = options.get("text").map(|x| x.clone());
+
+                self.heart_locket(text)?
+            },
             "resize" => {
                 let width = option_get_usize(&options, "width")?;
                 let height = option_get_usize(&options, "height")?;

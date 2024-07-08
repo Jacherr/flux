@@ -1,10 +1,14 @@
+use std::io::Cursor;
+
 use image::ImageFormat;
 
 use crate::core::media_container::MediaContainer;
 use crate::processing::makesweet::{
-    back_tattoo, billboard_cityscape, book, circuitboard, flag, flag2, fortune_cookie, rubiks, toaster, valentine,
+    back_tattoo, billboard_cityscape, book, circuitboard, flag, flag2, fortune_cookie, heart_locket, rubiks, toaster,
+    valentine,
 };
 use crate::processing::media_object::MediaObject;
+use crate::vips::vips_generate_heart_locket_text;
 
 use super::OperationResult;
 
@@ -69,6 +73,27 @@ impl MediaContainer {
         let enc = input.encode_first_frame_as(ImageFormat::Jpeg, &self.limits)?;
         let result = fortune_cookie(&enc)?;
 
+        Ok(MediaObject::Encoded(result))
+    }
+
+    pub fn heart_locket(&self, text: Option<String>) -> OperationResult {
+        let input1 = self
+            .pop_input()?
+            .encode_first_frame_as(ImageFormat::Jpeg, &self.limits)?;
+
+        let input2 = if let Some(text) = text {
+            let mut out = Vec::new();
+            vips_generate_heart_locket_text(&text, 250, 250)?
+                .to_rgb8()
+                .write_to(&mut Cursor::new(&mut out), ImageFormat::Jpeg)?;
+
+            out
+        } else {
+            self.pop_input()?
+                .encode_first_frame_as(ImageFormat::Jpeg, &self.limits)?
+        };
+
+        let result = heart_locket(&input1, &input2)?;
         Ok(MediaObject::Encoded(result))
     }
 

@@ -2,8 +2,8 @@ use std::ffi::{c_int, CStr, CString};
 use std::ptr::{null_mut, slice_from_raw_parts};
 
 use ffi::{
-    v_g_free, v_generate_caption_header, v_generate_meme_text, v_generate_motivate_text, v_get_error, v_gravity,
-    v_transcode_to, v_vips_init,
+    v_g_free, v_generate_caption_header, v_generate_heart_locket_text, v_generate_meme_text, v_generate_motivate_text,
+    v_get_error, v_gravity, v_transcode_to, v_vips_init,
 };
 use image::{DynamicImage, ImageBuffer, Rgba};
 
@@ -164,6 +164,36 @@ pub fn vips_gravity(input: &[u8], width: usize, height: usize) -> Result<Dynamic
 
     if res != 0 {
         return Err(FluxError::ScriptError(format!("error resizing: {}", vips_get_error())));
+    }
+
+    let buffer = unsafe { (*slice_from_raw_parts(buf, size)).to_owned() };
+    unsafe { v_g_free(buf as *const ()) };
+
+    let image: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(width as u32, height as u32, buffer).unwrap();
+
+    Ok(DynamicImage::ImageRgba8(image))
+}
+
+pub fn vips_generate_heart_locket_text(text: &str, width: usize, height: usize) -> Result<DynamicImage, FluxError> {
+    unsafe { v_vips_init() };
+
+    let text = format!(
+        "<span foreground=\"black\" background=\"white\"> {} </span>",
+        text_pango_safe(text)
+    );
+
+    let mut buf = null_mut();
+    let mut size: usize = 0;
+    let c_text = CString::new(text).map_err(|e| FluxError::ParameterError(e.to_string()))?;
+
+    let res = unsafe { v_generate_heart_locket_text(&mut buf, &mut size, height, width, c_text.as_ptr()) };
+
+    if res != 0 {
+        return Err(FluxError::ScriptError(format!(
+            "error generating text: {}",
+            vips_get_error()
+        )));
     }
 
     let buffer = unsafe { (*slice_from_raw_parts(buf, size)).to_owned() };

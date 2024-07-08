@@ -40,6 +40,13 @@ extern "C" {
         text_size: usize,
         pad_height: c_int,
     ) -> c_int;
+    pub fn v_generate_heart_locket_text(
+        buf: *mut *mut u8,
+        size: *mut usize,
+        height: usize,
+        width: usize,
+        text: *const c_char,
+    ) -> c_int;
     pub fn v_g_free(ptr: *const ());
     pub fn v_get_error() -> *const c_char;
 }

@@ -61,7 +61,7 @@ int v_generate_meme_text(char **buf, size_t *size, size_t *height, size_t width,
 	asprintf(&font, "Twemoji Color Emoji,Impact %ipx", sz);
 
 	RETURN_NONZERO(
-		vips_text(&image, text, "fontfile", "../subproc/assets/fonts/impact.ttf", "font", font, "rgba", 1, "width", textwidth, "align", VIPS_ALIGN_CENTRE, NULL))
+		vips_text(&image, text, "font", font, "rgba", 1, "width", textwidth, "align", VIPS_ALIGN_CENTRE, NULL))
 
 	RETURN_NONZERO(
 		vips_gaussmat(&mask, radius / 2, 0.1, "separable", 1, NULL))
@@ -132,6 +132,44 @@ int v_generate_motivate_text(char **buf, size_t *size, size_t *height, size_t wi
 
 	// assign return params
 	*height = (size_t)new_height;
+	*buf = vips_image_write_to_memory(output, size);
+
+	free(font);
+	g_object_unref(image);
+	g_object_unref(overlay);
+	g_object_unref(output);
+
+	return 0;
+}
+
+int v_generate_heart_locket_text(char **buf, size_t *size, size_t height, size_t width, char *text) {
+	VipsImage *image;
+	char *font;
+	asprintf(&font, "Twemoji Color Emoji,Times");
+
+	RETURN_NONZERO(
+		vips_text(&image, text, "font", font, "rgba", 1, "width", width/2, "height", height/2, "align", VIPS_ALIGN_CENTRE, NULL))
+
+	// extend image to correct dimensions
+	RETURN_NONZERO(
+		vips_gravity(image, &image, VIPS_COMPASS_DIRECTION_CENTRE, (int)width, (int)height, "extend", VIPS_EXTEND_WHITE, NULL))
+
+	// generate white overlay image
+	VipsImage *overlay;
+	RETURN_NONZERO(
+		vips_black(&overlay, width, height, NULL))
+	RETURN_NONZERO(
+		vips_invert(overlay, &overlay, NULL))
+
+	VipsImage *comp[] = {image, overlay};
+
+	// overlay image
+	VipsImage *output;
+	int mode[] = {VIPS_BLEND_MODE_DEST_OVER};
+	RETURN_NONZERO(
+		vips_composite(comp, &output, 2, mode, NULL))
+
+	// assign return params
 	*buf = vips_image_write_to_memory(output, size);
 
 	free(font);
