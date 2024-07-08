@@ -1,8 +1,9 @@
 use std::io::Cursor;
 use std::time::Duration;
 
+use image::codecs::jpeg::JpegEncoder;
 use image::codecs::png::PngEncoder;
-use image::{load_from_memory, Delay, ExtendedColorType, ImageEncoder, ImageFormat};
+use image::{load_from_memory, Delay, DynamicImage, ExtendedColorType, ImageEncoder, ImageFormat};
 
 use crate::core::error::FluxError;
 use crate::core::media_container::DecodeLimits;

@@ -119,6 +119,12 @@ pub fn decode_video_to_dynamic_images(
     buf: &[u8],
     limits: &DecodeLimits,
 ) -> Result<DynamicImagesMediaObject, FluxError> {
+    if !limits.video_decode_permitted.unwrap_or(true) {
+        return Err(FluxError::InputMediaError(
+            "Video decode has been disabled.".to_string(),
+        ));
+    }
+
     let split = ffmpeg::split_video(buf, limits.clone())?;
 
     let object = DynamicImagesMediaObject {

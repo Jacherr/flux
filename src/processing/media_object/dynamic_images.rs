@@ -1,7 +1,9 @@
 use image::codecs::gif::Repeat;
-use image::DynamicImage;
+use image::codecs::jpeg::JpegEncoder;
+use image::{load_from_memory, DynamicImage, ExtendedColorType};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
+use crate::core::error::FluxError;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
 
 #[derive(Clone)]
@@ -21,5 +23,41 @@ impl DynamicImagesMediaObject {
             .for_each(|(i, img)| img.0 = func(&mut img.0, i));
 
         self
+    }
+
+    pub fn iter_images_mut_falliable<
+        T: Fn(&mut DynamicImage, usize) -> Result<DynamicImage, FluxError> + Send + Sync,
+    >(
+        &mut self,
+        func: T,
+    ) -> Result<&mut Self, FluxError> {
+        self.images.par_iter_mut().enumerate().try_for_each(
+            |(i, img): (usize, &mut DynamicImageWrapper)| match func(&mut img.0, i) {
+                Ok(r) => {
+                    img.0 = r;
+                    return Ok(());
+                },
+                Err(e) => return Err(e),
+            },
+        )?;
+
+        Ok(self)
+    }
+
+    pub fn update_quality(&mut self, quality: u8) -> Result<(), FluxError> {
+        self.iter_images_mut_falliable(|image, _| {
+            let mut buf = Vec::new();
+            let mut encoder = JpegEncoder::new_with_quality(&mut buf, quality);
+            encoder.encode(
+                &image.to_rgb8().into_raw(),
+                image.width(),
+                image.height(),
+                ExtendedColorType::Rgb8,
+            )?;
+
+            Ok(load_from_memory(&buf)?)
+        })?;
+
+        Ok(())
     }
 }

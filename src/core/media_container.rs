@@ -13,6 +13,7 @@ pub struct DecodeLimits {
     pub frame_rate_limit: Option<u64>,
     pub video_time_limit: Option<Duration>,
     pub resolution_limit: Option<(u64, u64)>,
+    pub video_decode_permitted: Option<bool>,
 }
 
 /// Main media container for Flux. Contains everything needed to process a range of input formats by

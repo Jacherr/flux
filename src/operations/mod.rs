@@ -13,6 +13,7 @@ pub mod april_fools;
 pub mod bloom;
 pub mod blur;
 pub mod caption;
+pub mod deepfry;
 pub mod makesweet;
 pub mod resize;
 pub mod reverse;
@@ -81,6 +82,7 @@ impl MediaContainer {
                 self.caption(&text[..])?
             },
             "circuitboard" => self.circuitboard()?,
+            "deepfry" => self.deepfry()?,
             "flag" => self.flag()?,
             "flag2" => self.flag2()?,
             "fortune-cookie" => self.fortune_cookie()?,
