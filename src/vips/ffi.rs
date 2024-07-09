@@ -27,7 +27,7 @@ extern "C" {
     pub fn v_generate_meme_text(
         buf: *mut *mut u8,
         size: *mut usize,
-        height: *mut usize,
+        height: usize,
         width: usize,
         text: *const c_char,
     ) -> c_int;

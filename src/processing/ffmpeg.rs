@@ -103,13 +103,13 @@ pub fn april_fools(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
     )
 }
 
-pub fn drip(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
-    let sig = get_sig(&input).ok_or(FluxError::UnsupportedFiletype)?;
+pub fn drip(input: &[u8]) -> Result<Vec<u8>, FluxError> {
+    let sig = get_sig(input).ok_or(FluxError::UnsupportedFiletype)?;
 
     run_ffmpeg_command(
         &[
             "-i",
-            "../subproc/assets/audio/drip.mp3",
+            "./assets/audio/drip.mp3",
             "-t",
             "20",
             "-vf",
@@ -128,17 +128,17 @@ pub fn drip(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
                 &["-loop", "1"]
             }
         },
-        &input,
+        input,
     )
 }
 
-pub fn femurbreaker(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
+pub fn femurbreaker(input: &[u8]) -> Result<Vec<u8>, FluxError> {
     let sig = get_sig(&input).ok_or(FluxError::UnsupportedFiletype)?;
 
     run_ffmpeg_command(
         &[
             "-i",
-            "../subproc/assets/audio/femurbreaker.mp3",
+            "./assets/audio/femurbreaker.mp3",
             "-t",
             "15",
             "-vf",
@@ -157,17 +157,17 @@ pub fn femurbreaker(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
                 &["-loop", "1"]
             }
         },
-        &input,
+        input,
     )
 }
 
-pub fn siren(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
+pub fn siren(input: &[u8]) -> Result<Vec<u8>, FluxError> {
     let sig = get_sig(&input).ok_or(FluxError::UnsupportedFiletype)?;
 
     run_ffmpeg_command(
         &[
             "-i",
-            "../subproc/assets/audio/siren.mp3",
+            "./assets/audio/siren.mp3",
             "-t",
             "22",
             "-vf",
@@ -190,13 +190,13 @@ pub fn siren(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
     )
 }
 
-pub fn sweden(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
+pub fn sweden(input: &[u8]) -> Result<Vec<u8>, FluxError> {
     let sig = get_sig(&input).ok_or(FluxError::UnsupportedFiletype)?;
 
     run_ffmpeg_command(
         &[
             "-i",
-            "../subproc/assets/audio/sweden.mp3",
+            "./assets/audio/sweden.mp3",
             "-t",
             "22",
             "-vf",
@@ -219,13 +219,13 @@ pub fn sweden(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
     )
 }
 
-pub fn terraria(input: Vec<u8>) -> Result<Vec<u8>, FluxError> {
+pub fn terraria(input: &[u8]) -> Result<Vec<u8>, FluxError> {
     let sig = get_sig(&input).ok_or(FluxError::UnsupportedFiletype)?;
 
     run_ffmpeg_command(
         &[
             "-i",
-            "../subproc/assets/audio/terraria.mp3",
+            "./assets/audio/terraria.mp3",
             "-t",
             "15",
             "-profile:v",

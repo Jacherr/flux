@@ -110,17 +110,17 @@ pub fn vips_generate_motivate_box_blank(
     vips_generate_motivate_text("|", "black", width, text_width, pad_height)
 }
 
-pub fn vips_generate_meme_text(text: &str, width: usize) -> Result<DynamicImage, FluxError> {
+pub fn vips_generate_meme_text(text: &str, width: usize, height: usize) -> Result<DynamicImage, FluxError> {
     unsafe { v_vips_init() };
 
-    let real_text = format!("<span foreground=\"white\"> {} </span>", text_pango_safe(text));
+    let real_text = format!("<span foreground=\"white\">{}</span>", text_pango_safe(text));
 
     let mut buf = null_mut();
     let mut size: usize = 0;
-    let mut height: usize = 0;
+
     let c_text = CString::new(real_text).map_err(|e| FluxError::ParameterError(e.to_string()))?;
 
-    let res = unsafe { v_generate_meme_text(&mut buf, &mut size, &mut height, width, c_text.as_ptr()) };
+    let res = unsafe { v_generate_meme_text(&mut buf, &mut size, height, width, c_text.as_ptr()) };
 
     if res != 0 {
         return Err(FluxError::ScriptError(format!(

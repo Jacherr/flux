@@ -10,11 +10,13 @@ use crate::processing::media_object::MediaObject;
 
 pub mod ah_shit;
 pub mod april_fools;
+pub mod audio;
 pub mod bloom;
 pub mod blur;
 pub mod caption;
 pub mod deepfry;
 pub mod makesweet;
+pub mod meme;
 pub mod resize;
 pub mod reverse;
 
@@ -83,6 +85,8 @@ impl MediaContainer {
             },
             "circuitboard" => self.circuitboard()?,
             "deepfry" => self.deepfry()?,
+            "drip" => self.drip()?,
+            "femurbreaker" => self.femurbreaker()?,
             "flag" => self.flag()?,
             "flag2" => self.flag2()?,
             "fortune-cookie" => self.fortune_cookie()?,
@@ -90,6 +94,12 @@ impl MediaContainer {
                 let text = options.get("text").map(|x| x.clone());
 
                 self.heart_locket(text)?
+            },
+            "meme" => {
+                let top = options.get("top").map(|x| x.clone());
+                let bottom = options.get("bottom").map(|x| x.clone());
+
+                self.meme(top, bottom)?
             },
             "resize" => {
                 let width = option_get_usize(&options, "width")?;
@@ -102,6 +112,9 @@ impl MediaContainer {
             },
             "reverse" => self.reverse()?,
             "rubiks" => self.rubiks()?,
+            "siren" => self.siren()?,
+            "sweden" => self.siren()?,
+            "terraria" => self.terraria()?,
             "toaster" => self.toaster()?,
             "valentine" => self.valentine()?,
             _ => Err(FluxError::ParameterError(format!("Unrecognised operation {operation}")))?,

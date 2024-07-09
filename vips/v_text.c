@@ -48,20 +48,22 @@ int v_generate_caption_header(char **buf, size_t *size, size_t *height, size_t w
 	return 0;
 }
 
-int v_generate_meme_text(char **buf, size_t *size, size_t *height, size_t width, char *text)
+int v_generate_meme_text(char **buf, size_t *size, size_t height, size_t width, char *text)
 {
 	VipsImage *image;
 	VipsImage *mask;
 
+	// old width calculation
 	int textwidth = ((float)width * .92);
 	int sz = width / 9;
 	double radius = (double)sz / 18;
 
 	char *font;
-	asprintf(&font, "Twemoji Color Emoji,Impact %ipx", sz);
+	// asprintf(&font, "Twemoji Color Emoji,Impact %ipx", sz);
+	asprintf(&font, "Impact,Twemoji Color Emoji");
 
 	RETURN_NONZERO(
-		vips_text(&image, text, "font", font, "rgba", 1, "width", textwidth, "align", VIPS_ALIGN_CENTRE, NULL))
+		vips_text(&image, text, "font", font, "rgba", 1, "width", textwidth, "height", height, "align", VIPS_ALIGN_CENTRE, "wrap", VIPS_TEXT_WRAP_WORD_CHAR, NULL))
 
 	RETURN_NONZERO(
 		vips_gaussmat(&mask, radius / 2, 0.1, "separable", 1, NULL))
@@ -88,11 +90,9 @@ int v_generate_meme_text(char **buf, size_t *size, size_t *height, size_t width,
 	RETURN_NONZERO(
 		vips_composite2(convsep, image, &output, VIPS_BLEND_MODE_OVER, NULL))
 
-	int new_height = vips_image_get_height(output);
 	RETURN_NONZERO(
-		vips_gravity(output, &output, VIPS_COMPASS_DIRECTION_CENTRE, width, new_height, "extend", VIPS_EXTEND_BACKGROUND, NULL))
+		vips_gravity(output, &output, VIPS_COMPASS_DIRECTION_CENTRE, width, height, "extend", VIPS_EXTEND_BACKGROUND, NULL))
 
-	*height = (size_t)new_height;
 	*buf = vips_image_write_to_memory(output, size);
 
 	free(font);
