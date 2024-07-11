@@ -1,5 +1,6 @@
 use image::{DynamicImage, ImageBuffer, Rgba};
 
+use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
 use crate::processing::media_object::MediaObject;
@@ -12,6 +13,10 @@ impl MediaContainer {
         let input = self.pop_input()?;
 
         let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
+        if dyn_images.images.len() == 1 {
+            return Err(FluxError::SinglePageMediaUnsupported);
+        }
+
         let rgba8s = dyn_images
             .images
             .iter()

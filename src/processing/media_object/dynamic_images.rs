@@ -7,6 +7,7 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, IntoParallel
 
 use crate::core::error::FluxError;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
+use crate::util::collapse_neg;
 
 #[derive(Clone)]
 pub struct DynamicImagesMediaObject {
@@ -88,5 +89,10 @@ impl DynamicImagesMediaObject {
         }
 
         Ok(out)
+    }
+
+    pub fn get_circular_neg(&self, index: isize) -> &DynamicImageWrapper {
+        let corrected_index = collapse_neg(self.images.len() as isize, index);
+        self.images.get(corrected_index).unwrap()
     }
 }

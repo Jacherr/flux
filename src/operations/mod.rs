@@ -19,6 +19,7 @@ pub mod fisheye;
 pub mod flip_flop;
 pub mod frame_shift;
 pub mod frames;
+pub mod ghost;
 pub mod makesweet;
 pub mod meme;
 pub mod resize;
@@ -26,12 +27,12 @@ pub mod reverse;
 
 pub type OperationResult = Result<MediaObject, FluxError>;
 
-fn option_get_usize(options: &HashMap<String, String>, name: &str) -> anyhow::Result<Option<usize>> {
+fn option_get_u64(options: &HashMap<String, String>, name: &str) -> anyhow::Result<Option<u64>> {
     options
         .get(name)
         .map(|x| {
-            x.parse::<usize>()
-                .with_context(|| format!("Failed to parse {name} (invalid usize {})", options.get(name).unwrap()))
+            x.parse::<u64>()
+                .with_context(|| format!("Failed to parse {name} (invalid u64 {})", options.get(name).unwrap()))
         })
         .transpose()
 }
@@ -62,9 +63,9 @@ impl MediaContainer {
             "back-tattoo" => self.back_tattoo()?,
             "billboard" => self.billboard()?,
             "bloom" => {
-                let radius = option_get_usize(&options, "radius")?;
-                let brightness = option_get_usize(&options, "brightness")?;
-                let sharpness = option_get_usize(&options, "sharpness")?;
+                let radius = option_get_u64(&options, "radius")?;
+                let brightness = option_get_u64(&options, "brightness")?;
+                let sharpness = option_get_u64(&options, "sharpness")?;
 
                 let bloom_options = BloomOptions {
                     radius,
@@ -99,6 +100,11 @@ impl MediaContainer {
             "fortune-cookie" => self.fortune_cookie()?,
             "frame-shift" => self.frame_shift()?,
             "frames" => self.frames()?,
+            "ghost" => {
+                let depth = option_get_u64(&options, "depth")?;
+
+                self.ghost(depth)?
+            },
             "heart-locket" => {
                 let text = options.get("text").map(|x| x.clone());
 
@@ -111,8 +117,8 @@ impl MediaContainer {
                 self.meme(top, bottom)?
             },
             "resize" => {
-                let width = option_get_usize(&options, "width")?;
-                let height = option_get_usize(&options, "height")?;
+                let width = option_get_u64(&options, "width")?;
+                let height = option_get_u64(&options, "height")?;
                 let scale = option_get_f32(&options, "scale")?;
 
                 let resize_options = ResizeOptions { width, height, scale };

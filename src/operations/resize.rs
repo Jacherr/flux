@@ -10,8 +10,8 @@ use crate::processing::type_conversion::framebuffer_to_dyn_image;
 use super::OperationResult;
 
 pub struct ResizeOptions {
-    pub width: Option<usize>,
-    pub height: Option<usize>,
+    pub width: Option<u64>,
+    pub height: Option<u64>,
     pub scale: Option<f32>,
 }
 
@@ -20,7 +20,8 @@ impl MediaContainer {
         let input = self.pop_input()?;
 
         let (mut width, mut height) = if let Some(input) = input.try_encoded_video() {
-            get_video_dimensions(input)?
+            let (w, h) = get_video_dimensions(input)?;
+            (w as u64, h as u64)
         } else {
             let d = input
                 .to_dynamic_images(&self.limits)?
@@ -29,13 +30,13 @@ impl MediaContainer {
                 .unwrap()
                 .0
                 .dimensions();
-            (d.0 as usize, d.1 as usize)
+            (d.0 as u64, d.1 as u64)
         };
 
         match options.scale {
             Some(s) => {
-                width = (width as f32 * s).floor() as usize;
-                height = (height as f32 * s).floor() as usize;
+                width = (width as f32 * s).floor() as u64;
+                height = (height as f32 * s).floor() as u64;
             },
             None => {
                 width = options.width.unwrap_or(width * 2);
@@ -44,7 +45,7 @@ impl MediaContainer {
         }
 
         let out = if let Some(input) = input.try_encoded_video() {
-            let out = ffmpeg_operations::resize_video(input, width, height)?;
+            let out = ffmpeg_operations::resize_video(input, width as usize, height as usize)?;
             MediaObject::Encoded(out)
         } else {
             let mut input = input.to_dynamic_images(&self.limits)?.into_owned();

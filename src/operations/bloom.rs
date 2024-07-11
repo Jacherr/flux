@@ -5,9 +5,9 @@ use crate::processing::media_object::MediaObject;
 use super::OperationResult;
 
 pub struct BloomOptions {
-    pub radius: Option<usize>,
-    pub brightness: Option<usize>,
-    pub sharpness: Option<usize>,
+    pub radius: Option<u64>,
+    pub brightness: Option<u64>,
+    pub sharpness: Option<u64>,
 }
 
 impl MediaContainer {
@@ -18,9 +18,9 @@ impl MediaContainer {
         dyn_images.iter_images_mut(|f, _| {
             gegl::softglow(
                 f,
-                options.radius.unwrap_or(5),
-                options.brightness.unwrap_or(35),
-                options.sharpness.unwrap_or(85),
+                options.radius.unwrap_or(5) as usize,
+                options.brightness.unwrap_or(35) as usize,
+                options.sharpness.unwrap_or(85) as usize,
             )
         });
 

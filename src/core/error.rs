@@ -34,6 +34,8 @@ pub enum FluxError {
     ResidualImages(u64),
     #[error("Error with input media: {0}")]
     InputMediaError(String),
+    #[error("This operation only supports inputs with more than one frame.")]
+    SinglePageMediaUnsupported,
     #[error("Error: {0}")]
     Other(String),
 }
