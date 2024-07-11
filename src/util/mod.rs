@@ -48,3 +48,8 @@ pub fn get_buf_index_in_buf(buf: &[u8], search: &[u8]) -> isize {
     }
     result
 }
+
+#[inline(always)]
+pub fn collapse(target_limit: usize, current_value: usize) -> usize {
+    current_value % target_limit
+}

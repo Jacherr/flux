@@ -59,7 +59,7 @@ fn main() -> ExitCode {
     });
 
     loop {
-        let state = flux.step().context("Failed to process step");
+        let state = flux.step();
 
         match state {
             Ok(s) => {

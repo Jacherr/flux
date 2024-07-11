@@ -15,6 +15,10 @@ pub mod bloom;
 pub mod blur;
 pub mod caption;
 pub mod deepfry;
+pub mod fisheye;
+pub mod flip_flop;
+pub mod frame_shift;
+pub mod frames;
 pub mod makesweet;
 pub mod meme;
 pub mod resize;
@@ -87,9 +91,14 @@ impl MediaContainer {
             "deepfry" => self.deepfry()?,
             "drip" => self.drip()?,
             "femurbreaker" => self.femurbreaker()?,
+            "fisheye" => self.fisheye()?,
             "flag" => self.flag()?,
             "flag2" => self.flag2()?,
+            "flip" => self.flip()?,
+            "flop" => self.flop()?,
             "fortune-cookie" => self.fortune_cookie()?,
+            "frame-shift" => self.frame_shift()?,
+            "frames" => self.frames()?,
             "heart-locket" => {
                 let text = options.get("text").map(|x| x.clone());
 

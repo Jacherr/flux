@@ -4,6 +4,7 @@ use std::ops::FromResidual;
 
 use image::ImageError;
 use thiserror::Error;
+use zip::result::ZipError;
 
 #[derive(Error, Debug)]
 pub enum ArgError {
@@ -67,5 +68,11 @@ impl FromResidual<Result<Infallible, anyhow::Error>> for FluxError {
 impl From<anyhow::Error> for FluxError {
     fn from(value: anyhow::Error) -> Self {
         Self::Other(format!("{:#}", value))
+    }
+}
+
+impl From<ZipError> for FluxError {
+    fn from(value: ZipError) -> Self {
+        Self::Other(value.to_string())
     }
 }
