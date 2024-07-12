@@ -18,7 +18,7 @@ mod flag {
     pub const FLAG_INPUT: &'static str = "input";
     pub const FLAG_IMAGE_PAGE_LIMIT: &'static str = "page-limit";
     pub const FLAG_INPUT_RESOLUTION_LIMIT: &'static str = "res-limit";
-    pub const FLAG_DISABLE_VIDEO_SUPPORT: &'static str = "disable-video-support";
+    pub const FLAG_DISABLE_VIDEO_SUPPORT: &'static str = "disable-video-decode";
 
     pub const FLAG_MAPPER: LazyCell<HashMap<&'static str, &'static str>> = LazyCell::new(|| {
         let mut h = HashMap::new();
