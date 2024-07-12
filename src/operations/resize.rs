@@ -3,7 +3,7 @@ use image::GenericImageView;
 use crate::core::media_container::MediaContainer;
 use crate::processing::css_framebuffer::ops;
 use crate::processing::ffmpeg::{ffmpeg_operations, get_video_dimensions};
-use crate::processing::framebuffer::FrameBuffer;
+use crate::processing::framebuffer::FrameBufferOwned;
 use crate::processing::media_object::MediaObject;
 use crate::processing::type_conversion::framebuffer_to_dyn_image;
 
@@ -45,13 +45,15 @@ impl MediaContainer {
         }
 
         let out = if let Some(input) = input.try_encoded_video() {
-            let out = ffmpeg_operations::resize_video(input, width as usize, height as usize)?;
+            let real_width = if width % 2 == 1 { width + 1 } else { width };
+            let real_height = if height % 2 == 1 { height + 1 } else { height };
+            let out = ffmpeg_operations::resize_video(input, real_width as usize, real_height as usize)?;
             MediaObject::Encoded(out)
         } else {
             let mut input = input.to_dynamic_images(&self.limits)?.into_owned();
 
             input.iter_images_mut(|f, _| {
-                let fb = FrameBuffer::new_from_dyn_image(f);
+                let fb = FrameBufferOwned::new_from_dyn_image(f);
                 let out = ops::resize::nearest(fb.fb(), width.clamp(2, 2048) as usize, height.clamp(2, 2048) as usize);
 
                 let w = out.width as u32;

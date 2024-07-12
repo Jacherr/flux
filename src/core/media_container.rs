@@ -32,7 +32,10 @@ impl MediaContainer {
     pub fn new() -> Self {
         Self {
             input_queue: InputQueue::new(),
-            limits: DecodeLimits::default(),
+            limits: DecodeLimits {
+                video_decode_permitted: Some(true),
+                ..Default::default()
+            },
         }
     }
 

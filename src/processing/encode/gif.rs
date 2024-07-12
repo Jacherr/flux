@@ -1,7 +1,7 @@
 use crate::core::error::FluxError;
 //use crate::framebuffer::FrameBuffer;
 use crate::processing::css_framebuffer::quant;
-use crate::processing::framebuffer::FrameBuffer;
+use crate::processing::framebuffer::FrameBufferOwned;
 use crate::util::convert_ratio_to_integer;
 use gif::{AnyExtension, Frame};
 use image::codecs::gif::Repeat;
@@ -63,7 +63,7 @@ pub fn encode(
     let new_frames: Vec<gif::Frame> = frames
         .par_iter()
         .map(|x| {
-            let fb = FrameBuffer::new_from_dyn_image(x.0);
+            let fb = FrameBufferOwned::new_from_dyn_image(x.0);
 
             let quant = quant::quantize(
                 &fb,

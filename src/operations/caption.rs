@@ -3,7 +3,7 @@ use image::GenericImageView;
 use crate::core::media_container::MediaContainer;
 use crate::processing::css_framebuffer::{framebuffer, ops};
 use crate::processing::ffmpeg::{ffmpeg_operations, get_video_dimensions};
-use crate::processing::framebuffer::FrameBuffer;
+use crate::processing::framebuffer::FrameBufferOwned;
 use crate::processing::media_object::MediaObject;
 use crate::processing::type_conversion::framebuffer_to_dyn_image;
 use crate::vips::vips_generate_caption;
@@ -25,11 +25,11 @@ impl MediaContainer {
             let (w, h) = x.images.first().unwrap().0.dimensions();
             let text = vips_generate_caption(text, w as usize)?;
 
-            let text_owned_fb = FrameBuffer::new_from_dyn_image(&text);
+            let text_owned_fb = FrameBufferOwned::new_from_dyn_image(&text);
             let text_fb = text_owned_fb.fb();
 
             x.iter_images_mut(|f, _| {
-                let img_fb = FrameBuffer::new_from_dyn_image(f);
+                let img_fb = FrameBufferOwned::new_from_dyn_image(f);
 
                 let mut canvas = framebuffer::new(w as usize, (h + text.height()) as usize);
                 ops::overlay::replace(&mut canvas, text_fb, 0, 0);

@@ -81,6 +81,9 @@ impl Flux {
             ArgType::InputResolutionLimit((w, h)) => {
                 self.media_container.limits.resolution_limit = Some((w, h));
             },
+            ArgType::VideoSupportDisabled => {
+                self.media_container.limits.video_decode_permitted = Some(false);
+            },
         }
 
         Ok(self.previous_action.clone().unwrap())

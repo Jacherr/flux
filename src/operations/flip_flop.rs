@@ -1,7 +1,7 @@
 use crate::core::media_container::MediaContainer;
 use crate::processing::css_framebuffer::ops;
 use crate::processing::ffmpeg::ffmpeg_operations;
-use crate::processing::framebuffer::FrameBuffer;
+use crate::processing::framebuffer::FrameBufferOwned;
 use crate::processing::media_object::MediaObject;
 
 use super::OperationResult;
@@ -16,7 +16,7 @@ impl MediaContainer {
         } else {
             let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
             dyn_images.iter_images_mut(|f, _| {
-                let mut fb = FrameBuffer::new_from_dyn_image(f);
+                let mut fb = FrameBufferOwned::new_from_dyn_image(f);
                 ops::flip::vertical(fb.fb_mut());
                 fb.into_dyn_image()
             });
@@ -34,7 +34,7 @@ impl MediaContainer {
         } else {
             let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
             dyn_images.iter_images_mut(|f, _| {
-                let mut fb = FrameBuffer::new_from_dyn_image(f);
+                let mut fb = FrameBufferOwned::new_from_dyn_image(f);
                 ops::flip::horizontal(fb.fb_mut());
                 fb.into_dyn_image()
             });

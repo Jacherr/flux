@@ -1,12 +1,13 @@
 use crate::processing::css_framebuffer::framebuffer;
 use image::{DynamicImage, RgbImage, RgbaImage};
+use std::borrow::Cow;
 use std::ops::Deref;
 
-pub struct FrameBuffer {
+pub struct FrameBufferOwned {
     _image: RgbaImage,
     fb: framebuffer,
 }
-impl FrameBuffer {
+impl FrameBufferOwned {
     pub fn new_from_imagebuffer_rgb(buf: RgbImage) -> Self {
         let buf = DynamicImage::ImageRgb8(buf).to_rgba8();
         let raw = buf.as_raw().as_ptr();
@@ -36,7 +37,7 @@ impl FrameBuffer {
         &mut self.fb
     }
 
-    /// Converts this `FrameBuffer` to a `Vec<u8>`. The returned `Vec<u8>` reuses the same
+    /// Converts this `FrameBufferOwned` to a `Vec<u8>`. The returned `Vec<u8>` reuses the same
     /// allocation as the initial image
     pub fn into_vec(self) -> Vec<u8> {
         // `framebuffer::vec()` reuses `self._image`'s buffer, so we need to make sure
@@ -45,7 +46,7 @@ impl FrameBuffer {
         self.fb.into_vec()
     }
 
-    /// Converts this `FrameBuffer` to a tuple containing its raw parts
+    /// Converts this `FrameBufferOwned` to a tuple containing its raw parts
     /// (width, height, vector)
     pub fn into_raw_parts(self) -> (u32, u32, Vec<u8>) {
         let w = self.width as u32;
@@ -54,12 +55,65 @@ impl FrameBuffer {
         (w, h, v)
     }
 }
-impl Deref for FrameBuffer {
+impl Deref for FrameBufferOwned {
     type Target = framebuffer;
     fn deref(&self) -> &Self::Target {
         &self.fb
     }
 }
 
-unsafe impl Send for FrameBuffer {}
-unsafe impl Sync for FrameBuffer {}
+unsafe impl Send for FrameBufferOwned {}
+unsafe impl Sync for FrameBufferOwned {}
+
+pub struct FrameBufferBorrowed<'a> {
+    _image: Cow<'a, RgbaImage>,
+    fb: framebuffer,
+}
+impl<'a> FrameBufferBorrowed<'a> {
+    pub fn new_from_dyn_image(f: &'a DynamicImage) -> Self {
+        let buf = f
+            .as_rgba8()
+            .map(Cow::Borrowed)
+            .unwrap_or(Cow::Owned(f.clone().into_rgba8()));
+
+        let raw = buf.as_raw().as_ptr();
+
+        let fb = framebuffer::from(buf.width() as usize, buf.height() as usize, raw as *mut u8);
+        Self { _image: buf, fb }
+    }
+
+    pub fn into_dyn_image(self) -> DynamicImage {
+        let (w, h, vec) = self.into_raw_parts();
+        let imagebuffer = image::RgbaImage::from_vec(w, h, vec).unwrap();
+        DynamicImage::ImageRgba8(imagebuffer)
+    }
+
+    pub fn fb(&self) -> &framebuffer {
+        &self.fb
+    }
+
+    pub fn fb_mut(&mut self) -> &mut framebuffer {
+        &mut self.fb
+    }
+
+    /// Converts this `FrameBufferBorrowed` to a `Vec<u8>`. The returned `Vec<u8>` reuses the same
+    /// allocation as the initial image
+    pub fn into_vec(self) -> Vec<u8> {
+        self.fb.into_vec()
+    }
+
+    /// Converts this `FrameBufferBorrowed` to a tuple containing its raw parts
+    /// (width, height, vector)
+    pub fn into_raw_parts(self) -> (u32, u32, Vec<u8>) {
+        let w = self.width as u32;
+        let h = self.height as u32;
+        let v = self.into_vec();
+        (w, h, v)
+    }
+}
+impl<'a> Deref for FrameBufferBorrowed<'a> {
+    type Target = framebuffer;
+    fn deref(&self) -> &Self::Target {
+        &self.fb
+    }
+}

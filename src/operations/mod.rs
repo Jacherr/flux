@@ -20,8 +20,11 @@ pub mod flip_flop;
 pub mod frame_shift;
 pub mod frames;
 pub mod ghost;
+pub mod gif;
+pub mod magik;
 pub mod makesweet;
 pub mod meme;
+pub mod ping_pong;
 pub mod resize;
 pub mod reverse;
 
@@ -105,17 +108,20 @@ impl MediaContainer {
 
                 self.ghost(depth)?
             },
+            "gif" => self.gif()?,
             "heart-locket" => {
                 let text = options.get("text").map(|x| x.clone());
 
                 self.heart_locket(text)?
             },
+            "magik" => self.magik()?,
             "meme" => {
                 let top = options.get("top").map(|x| x.clone());
                 let bottom = options.get("bottom").map(|x| x.clone());
 
                 self.meme(top, bottom)?
             },
+            "ping-pong" => self.ping_pong()?,
             "resize" => {
                 let width = option_get_u64(&options, "width")?;
                 let height = option_get_u64(&options, "height")?;

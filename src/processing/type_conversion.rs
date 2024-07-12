@@ -10,9 +10,9 @@ pub fn convert_frames_to_dynamic_images(frames: Vec<Frame>) -> Vec<DynamicImageW
     let mut images: Vec<DynamicImageWrapper> = vec![];
 
     for frame in frames {
-        let dyn_image = DynamicImage::ImageRgba8(frame.clone().into_buffer());
         let (numer, denom) = frame.delay().numer_denom_ms();
         let delay = convert_ratio_to_integer(numer, denom) as u64;
+        let dyn_image = DynamicImage::ImageRgba8(frame.into_buffer());
         let image = DynamicImageWrapper::new(dyn_image, Some(Duration::from_millis(delay)));
         images.push(image);
     }

@@ -7,14 +7,14 @@
     const_fn_floating_point_arithmetic,
     try_trait_v2,
     let_chains,
-    exitcode_exit_method
+    exitcode_exit_method,
+    compiler_builtins
 )]
 
 use core::flux::{Flux, StepAction};
 use std::process::{Command, ExitCode};
 use std::thread;
 
-use anyhow::Context;
 use signal_hook::consts::SIGTERM;
 use signal_hook::iterator::Signals;
 use time::format_description;

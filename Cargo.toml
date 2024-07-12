@@ -9,6 +9,8 @@ bytes = "1.6.0"
 fnv = "1.0.7"
 gif = "0.13.1"
 image = "0.25.1"
+libc = "0.2.155"
+lqr = { git = "https://github.com/Jacherr/lqr" }
 num-rational = "0.4.2"
 num_cpus = "1.16.0"
 rand = "0.8.5"

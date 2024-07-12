@@ -27,7 +27,15 @@ pub fn decode_to_dynamic_images(input: &[u8], limits: &DecodeLimits) -> Result<D
         Type::Png => decode_png_to_dynamic_images(input)?,
         Type::Webp => decode_webp_to_dynamic_images(input)?,
         Type::Gif => decode_gif_to_dynamic_images(input, limits.frame_limit)?,
-        Type::Webm | Type::Mp4 => decode_video_to_dynamic_images(input, limits)?,
+        Type::Webm | Type::Mp4 => {
+            if limits.video_decode_permitted == Some(false) {
+                return Err(FluxError::InputMediaError(
+                    "Video support is enabled either by voting at https://vote.jacher.io/topgg (for temporary access) or by becoming a patron."
+                        .to_owned(),
+                ));
+            }
+            decode_video_to_dynamic_images(input, limits)?
+        },
     };
 
     // resize to fit any limits
