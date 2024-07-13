@@ -23,3 +23,50 @@ pub fn gif_get_repeat_count(buf: &[u8]) -> Repeat {
         Repeat::Finite(repeats)
     }
 }
+
+pub fn gif_get_comments(buf: &[u8]) -> Vec<String> {
+    let comment_block_match = &[0x00u8, 0x21u8, 0xFEu8];
+    let mut next_match_index = get_buf_index_in_buf(buf, comment_block_match);
+    let mut results: Vec<String> = vec![];
+    let mut used: Vec<isize> = vec![];
+
+    while next_match_index != -1 {
+        let mut index = next_match_index as usize + comment_block_match.len();
+
+        let mut comment_raw: Vec<u8> = vec![];
+
+        while buf[index] != 0 {
+            let sub_block_len = buf[index];
+            let data_start = index + 1;
+            let sub_block = &buf
+                .get(data_start..(sub_block_len as usize + data_start))
+                .unwrap_or(&[]);
+
+            // fallback
+            if sub_block.is_empty() {
+                return vec![];
+            }
+
+            comment_raw.extend(sub_block.iter());
+
+            index += sub_block_len as usize + 1;
+        }
+
+        // this is just a fallback in case the extractor somehow finds something that isnt really
+        // a valid comment (assyst probably wont handle unicode well)
+        let stringified = String::from_utf8_lossy(&comment_raw).to_string();
+        if stringified.is_ascii() {
+            results.push(stringified);
+        }
+
+        used.push(next_match_index);
+
+        next_match_index = get_buf_index_in_buf(&buf[(next_match_index + 1) as usize..buf.len()], comment_block_match);
+
+        if used.contains(&next_match_index) {
+            break;
+        };
+    }
+
+    results
+}

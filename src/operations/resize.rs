@@ -19,8 +19,8 @@ impl MediaContainer {
     pub fn resize(&self, options: ResizeOptions) -> OperationResult {
         let input = self.pop_input()?;
 
-        let (mut width, mut height) = if let Some(input) = input.try_encoded_video() {
-            let (w, h) = get_video_dimensions(input)?;
+        let (mut width, mut height) = if let Some(input) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            let (w, h) = get_video_dimensions(input?)?;
             (w as u64, h as u64)
         } else {
             let d = input
@@ -44,10 +44,10 @@ impl MediaContainer {
             },
         }
 
-        let out = if let Some(input) = input.try_encoded_video() {
+        let out = if let Some(input) = input.try_encoded_video(self.limits.video_decode_permitted) {
             let real_width = if width % 2 == 1 { width + 1 } else { width };
             let real_height = if height % 2 == 1 { height + 1 } else { height };
-            let out = ffmpeg_operations::resize_video(input, real_width as usize, real_height as usize)?;
+            let out = ffmpeg_operations::resize_video(input?, real_width as usize, real_height as usize)?;
             MediaObject::Encoded(out)
         } else {
             let mut input = input.to_dynamic_images(&self.limits)?.into_owned();

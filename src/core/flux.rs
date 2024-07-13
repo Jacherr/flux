@@ -2,6 +2,8 @@ use std::env::Args;
 use std::fs::{read, write};
 use std::io::{stdin, Read};
 
+use anyhow::Context;
+use serde_json::to_string;
 use tracing::debug;
 
 use crate::core::args::ArgType;
@@ -21,6 +23,8 @@ pub enum StepAction {
     OutputWritten,
     /// Some meta proprty has been set.
     MetaPropertySet(&'static str),
+    /// Information about the next input has been requested. Exit.
+    MediaInfo,
 }
 
 /// Main stateful struct for the current Flux instance.
@@ -77,12 +81,21 @@ impl Flux {
             },
             ArgType::ImagePageLimit(lim) => {
                 self.media_container.limits.frame_limit = Some(lim);
+                self.previous_action = Some(StepAction::MetaPropertySet("page-limit"));
             },
             ArgType::InputResolutionLimit((w, h)) => {
                 self.media_container.limits.resolution_limit = Some((w, h));
+                self.previous_action = Some(StepAction::MetaPropertySet("resolution-limit"));
             },
             ArgType::VideoSupportDisabled => {
-                self.media_container.limits.video_decode_permitted = Some(false);
+                self.media_container.limits.video_decode_permitted = false;
+                self.previous_action = Some(StepAction::MetaPropertySet("video-decode-disabled"));
+            },
+            ArgType::Info => {
+                let info = self.media_container.info()?;
+                let json = to_string(&info).context("Failed to serialize info output")?;
+                println!("{json}");
+                self.previous_action = Some(StepAction::MediaInfo);
             },
         }
 

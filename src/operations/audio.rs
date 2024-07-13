@@ -7,7 +7,7 @@ use super::OperationResult;
 impl MediaContainer {
     pub fn drip(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let input = input.encode()?;
+        let input = input.encode(&self.limits)?;
 
         let out = drip(&input)?;
 
@@ -16,7 +16,7 @@ impl MediaContainer {
 
     pub fn femurbreaker(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let input = input.encode()?;
+        let input = input.encode(&self.limits)?;
 
         let out = femurbreaker(&input)?;
 
@@ -25,7 +25,7 @@ impl MediaContainer {
 
     pub fn siren(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let input = input.encode()?;
+        let input = input.encode(&self.limits)?;
 
         let out = siren(&input)?;
 
@@ -34,7 +34,7 @@ impl MediaContainer {
 
     pub fn sweden(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let input = input.encode()?;
+        let input = input.encode(&self.limits)?;
 
         let out = sweden(&input)?;
 
@@ -43,7 +43,7 @@ impl MediaContainer {
 
     pub fn terraria(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let input = input.encode()?;
+        let input = input.encode(&self.limits)?;
 
         let out = terraria(&input)?;
 

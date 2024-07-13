@@ -14,7 +14,8 @@ impl MediaContainer {
     pub fn caption(&self, text: &str) -> OperationResult {
         let input = self.pop_input()?;
 
-        if let Some(input) = input.try_encoded_video() {
+        if let Some(input) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            let input = input?;
             let (w, _) = get_video_dimensions(input)?;
             let text = vips_generate_caption(text, w)?;
             let res = ffmpeg_operations::caption_video(input, text)?;

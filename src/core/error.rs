@@ -36,6 +36,10 @@ pub enum FluxError {
     InputMediaError(String),
     #[error("This operation only supports inputs with more than one frame.")]
     SinglePageMediaUnsupported,
+    #[error(
+        "Video support is enabled either by voting at https://vote.jacher.io/topgg (for temporary access) or by becoming a patron."
+    )]
+    VideoDecodeDisabled,
     #[error("Error: {0}")]
     Other(String),
 }

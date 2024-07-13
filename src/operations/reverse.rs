@@ -8,8 +8,8 @@ use super::OperationResult;
 impl MediaContainer {
     pub fn reverse(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let out = if let Some(input) = input.try_encoded_video() {
-            let out = ffmpeg_operations::reverse_video(input)?;
+        let out = if let Some(input) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            let out = ffmpeg_operations::reverse_video(input?)?;
             MediaObject::Encoded(out)
         } else {
             let input = input.to_dynamic_images(&self.limits)?;

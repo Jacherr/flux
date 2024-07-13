@@ -21,6 +21,9 @@ pub mod frame_shift;
 pub mod frames;
 pub mod ghost;
 pub mod gif;
+pub mod globe;
+pub mod grayscale;
+pub mod info;
 pub mod magik;
 pub mod makesweet;
 pub mod meme;
@@ -28,6 +31,7 @@ pub mod ping_pong;
 pub mod resize;
 pub mod reverse;
 pub mod scramble;
+pub mod speed;
 
 pub type OperationResult = Result<MediaObject, FluxError>;
 
@@ -111,6 +115,7 @@ impl MediaContainer {
             },
             "gif" => self.gif()?,
             "gif-magik" => self.gif_magik()?,
+            "globe" => self.globe()?,
             "heart-locket" => {
                 let text = options.get("text").map(|x| x.clone());
 
@@ -137,6 +142,11 @@ impl MediaContainer {
             "rubiks" => self.rubiks()?,
             "scramble" => self.scramble()?,
             "siren" => self.siren()?,
+            "speed" => {
+                let multiplier = option_get_f32(&options, "multiplier")?;
+
+                self.speed(multiplier.map(|m| m.into()))?
+            },
             "sweden" => self.siren()?,
             "terraria" => self.terraria()?,
             "toaster" => self.toaster()?,

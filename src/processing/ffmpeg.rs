@@ -7,6 +7,7 @@ use std::sync::Arc;
 use std::thread::spawn;
 use std::time::Duration;
 
+use anyhow::Context;
 use image::{load_from_memory, DynamicImage};
 use rand::distributions::Alphanumeric;
 use rand::prelude::SliceRandom;
@@ -16,14 +17,8 @@ use super::filetype::{get_sig, Type};
 use crate::core::error::FluxError;
 use crate::core::media_container::DecodeLimits;
 use crate::util::owned_child::IntoOwnedChild;
+use crate::util::tmpfile::TmpFile;
 use crate::util::{hash_buffer, pad_left};
-
-struct FfmpegFileDeletionDefer(String);
-impl Drop for FfmpegFileDeletionDefer {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.0);
-    }
-}
 
 pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]) -> Result<Vec<u8>, FluxError> {
     let cpus = num_cpus::get().to_string();
@@ -40,16 +35,16 @@ pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]
     input.hash(&mut body_hasher);
 
     let hex = format!("{:x}", body_hasher.finish());
-    let out_path = format!("/tmp/{}{}", hex, rand_string);
-    let in_path = format!("{}_", out_path);
-    write(&in_path, input)?;
+    let out_file = TmpFile::new(format!("{}{}", hex, rand_string));
+    let in_file = TmpFile::new(format!("{}_", out_file.path()));
+    in_file.write(input)?;
 
     if input.len() > 0 {
-        args.extend_from_slice(&["-i", &in_path, "-threads", &cpus]);
+        args.extend_from_slice(&["-i", in_file.path(), "-threads", &cpus]);
     }
 
     args.extend_from_slice(commands);
-    args.push(&out_path);
+    args.push(out_file.path());
 
     let command = Command::new("ffmpeg")
         .stdin(Stdio::piped())
@@ -68,9 +63,7 @@ pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]
         ));
     }
 
-    let new_buffer = read(&out_path)?;
-    remove_file(out_path)?;
-    remove_file(in_path)?;
+    let new_buffer = read(out_file.path())?;
     Ok(new_buffer)
 }
 
@@ -349,7 +342,11 @@ pub fn split_video(input: &[u8], limits: DecodeLimits) -> Result<(Vec<DynamicIma
     Ok((imgs, audio))
 }
 
-pub fn create_video_from_split(dyn_images: Vec<DynamicImage>, audio: &[u8]) -> Result<Vec<u8>, FluxError> {
+pub fn create_video_from_split(
+    dyn_images: Vec<DynamicImage>,
+    audio: &[u8],
+    limits: &DecodeLimits,
+) -> Result<Vec<u8>, FluxError> {
     let cpus = num_cpus::get().to_string();
 
     let folder = format!("/tmp/{}", hash_buffer(&[1, 2, 3, 4]));
@@ -367,9 +364,10 @@ pub fn create_video_from_split(dyn_images: Vec<DynamicImage>, audio: &[u8]) -> R
     let out_path = format!("{}/output.mp4", folder);
 
     let mut args = Vec::from(["-y", "-hide_banner", "-loglevel", "error"]);
+    let fps = limits.frame_rate_limit.unwrap_or(20).to_string();
     args.extend_from_slice(&[
         "-framerate",
-        "20",
+        &fps,
         "-pattern_type",
         "glob",
         "-i",
@@ -566,13 +564,65 @@ pub fn get_video_first_frame(input: &[u8]) -> Result<Vec<u8>, FluxError> {
     Ok(frame)
 }
 
+pub fn get_video_fps(input: &[u8]) -> Result<f64, FluxError> {
+    let mut body_hasher = DefaultHasher::new();
+    input.hash(&mut body_hasher);
+
+    let hex = format!("{:x}", body_hasher.finish());
+    let file = TmpFile::new(hex);
+
+    file.write(input)?;
+
+    let args = Vec::from([
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=r_frame_rate",
+        "-of",
+        "csv=p=0",
+        file.path(),
+    ]);
+
+    let command = Command::new("ffprobe")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .args(&args)
+        .spawn()?
+        .into_owned_child();
+
+    let output = command.wait_with_output()?;
+    let fps = String::from_utf8_lossy(&output.stdout).to_string();
+
+    let fps = if fps.contains("/") {
+        let parts = fps.trim().split_once('/').unwrap();
+        let numer = parts
+            .0
+            .parse::<f64>()
+            .context(format!("Failed to parse fps numer {}", parts.0))?;
+        let denom = parts
+            .1
+            .parse::<f64>()
+            .context(format!("Failed to parse fps denom {}", parts.1))?;
+
+        numer / denom
+    } else {
+        fps.trim().parse::<f64>().context("Failed to parse fps")?
+    };
+
+    Ok(fps)
+}
+
 pub mod ffmpeg_operations {
     use std::fs;
-    use std::sync::Mutex;
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use anyhow::Context;
     use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+
+    use crate::util::tmpfile::TmpFile;
 
     use super::*;
 
@@ -809,8 +859,6 @@ pub mod ffmpeg_operations {
         let mut next_start = 0;
         let mut slice_sections = Vec::new();
 
-        let defers = Arc::new(Mutex::new(Vec::new()));
-
         while len_remaining > 0 {
             let next_chunk_len = thread_rng().gen_range(1..500).clamp(0, len_remaining) as u128;
             len_remaining -= next_chunk_len;
@@ -834,34 +882,34 @@ pub mod ffmpeg_operations {
             slice_sections.push((chunk_len_fmt, next_start_fmt));
         }
 
-        let mut files = vec![String::new(); slice_sections.len()];
+        let mut files = vec![TmpFile::new(""); slice_sections.len()];
         files.par_iter_mut().enumerate().try_for_each(|(i, f)| {
             let (chunk_len_fmt, next_start_fmt) = slice_sections.get(i).unwrap();
-
-            println!("{next_start_fmt},{chunk_len_fmt}");
 
             let slice = slice_video(input, next_start_fmt, chunk_len_fmt)?;
 
             let hashed_slice = hash_buffer(&slice);
-            let path = format!("/tmp/{}-{i}.mp4", hashed_slice);
+            let file = TmpFile::new(format!("{hashed_slice}-{i}.mp4"));
+            file.write(&slice)?;
 
-            fs::write(&path, &slice)?;
-            *f = path.clone();
-            defers.lock().unwrap().push(FfmpegFileDeletionDefer(path));
-
+            *f = file;
             Ok::<(), FluxError>(())
         })?;
 
         files.shuffle(&mut thread_rng());
 
-        let file_list = files.iter().map(|x| format!("file {x}")).collect::<Vec<_>>().join("\n");
+        let file_list = files
+            .iter()
+            .map(|x| format!("file {}", x.path()))
+            .collect::<Vec<_>>()
+            .join("\n");
+
         let list_name = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-        let list_path = format!("/tmp/{list_name}.txt");
-        fs::write(&list_path, &file_list)?;
-        let _list_defer = FfmpegFileDeletionDefer(list_path.clone());
+        let list_file = TmpFile::new(format!("{list_name}.txt"));
+        list_file.write(&file_list)?;
 
         run_ffmpeg_command(
-            &["-i", &list_path, "-f", "mp4"],
+            &["-i", list_file.path(), "-f", "mp4"],
             &["-f", "concat", "-hide_banner", "-loglevel", "error", "-safe", "0"],
             &[],
         )

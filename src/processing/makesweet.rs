@@ -14,8 +14,10 @@ impl<'a> Drop for MakesweetDirectoryDeletionDefer<'a> {
 }
 
 pub fn run_makesweet(images: &[&[u8]], operation: &str) -> Result<Vec<u8>, FluxError> {
+    let id = std::process::id();
+
     let relative_dir = format!(
-        "{}_makesweet",
+        "{id}-{}_makesweet",
         SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis()
     );
 

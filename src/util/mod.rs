@@ -5,6 +5,7 @@ use rand::Rng;
 use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
 
 pub mod owned_child;
+pub mod tmpfile;
 
 pub fn pad_left(s: String, m: usize, c: char) -> String {
     if let Some(columns_short) = m.checked_sub(s.len()) {
@@ -79,4 +80,28 @@ where
         start += 1;
         end += 1;
     }
+}
+
+pub fn remove_every_nth_from_vec<T>(vec: &mut Vec<T>, n: usize) -> &mut Vec<T> {
+    let mut i = 1;
+
+    while (i * n) < vec.len() {
+        vec.remove(i * n);
+        i += 1;
+    }
+
+    vec
+}
+
+pub fn keep_every_nth_in_vec<T: Clone>(vec: &Vec<T>, n: usize) -> Vec<T> {
+    let mut i = 1;
+
+    let mut new = vec![];
+
+    while (i * n) < vec.len() {
+        new.push(vec[i * n].clone());
+        i += 1;
+    }
+
+    new
 }

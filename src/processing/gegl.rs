@@ -4,21 +4,22 @@ use image::{DynamicImage, ImageFormat};
 
 use crate::util::hash_buffer;
 use crate::util::owned_child::IntoOwnedChild;
+use crate::util::tmpfile::TmpFile;
 
 fn gegl(image: &DynamicImage, args: &[&str]) -> DynamicImage {
     let mut frame: Vec<u8> = Vec::new();
     image.write_to(&mut Cursor::new(&mut frame), ImageFormat::Png).unwrap();
     let hash = hash_buffer(&frame);
-    let path = format!("/tmp/gegl-{}.png", hash);
-    std::fs::write(&path, frame).unwrap();
+    let file = TmpFile::new(format!("gegl-{}.png", hash));
+    file.write(frame).unwrap();
 
     let args = args.to_vec();
 
     let gegl_process = std::process::Command::new("gegl")
         .arg("-i")
-        .arg(&path)
+        .arg(file.path())
         .arg("-o")
-        .arg(&path)
+        .arg(file.path())
         .arg("--")
         .args(args)
         .spawn()
@@ -26,8 +27,7 @@ fn gegl(image: &DynamicImage, args: &[&str]) -> DynamicImage {
         .into_owned_child();
 
     let output = gegl_process.wait_with_output().unwrap();
-    let file = std::fs::read(&path).unwrap();
-    std::fs::remove_file(path).unwrap();
+    let file = std::fs::read(file.path()).unwrap();
 
     if !output.stderr.is_empty() {
         panic!("{}", String::from_utf8_lossy(&output.stderr));

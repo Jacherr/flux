@@ -11,8 +11,8 @@ use super::OperationResult;
 impl MediaContainer {
     pub fn april_fools(&self) -> OperationResult {
         let input = self.pop_input()?;
-        let first = if let Some(v) = input.try_encoded_video() {
-            DynamicImageWrapper::new(load_from_memory(&get_video_first_frame(v)?)?, None)
+        let first = if let Some(v) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            DynamicImageWrapper::new(load_from_memory(&get_video_first_frame(v?)?)?, None)
         } else {
             input.to_dynamic_images(&self.limits)?.into_owned().images[0].clone()
         };
@@ -22,7 +22,7 @@ impl MediaContainer {
             audio: None,
             repeat: Repeat::Infinite,
         })
-        .encode()?;
+        .encode(&self.limits)?;
 
         let out = april_fools(image)?;
 

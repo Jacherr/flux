@@ -24,13 +24,17 @@ impl MediaObject {
         }
     }
 
-    pub fn try_encoded_video(&self) -> Option<&[u8]> {
+    pub fn try_encoded_video(&self, decode_permitted: bool) -> Option<Result<&[u8], FluxError>> {
         match self {
             Self::DynamicImages(_) => None,
             Self::Encoded(enc) => {
+                if !decode_permitted {
+                    return Some(Err(FluxError::VideoDecodeDisabled));
+                }
+
                 let ty = get_sig_incl_mp4(enc);
                 if ty.is_some_and(|ty| ty == Type::Mp4 || ty == Type::Webm) {
-                    Some(enc)
+                    Some(Ok(enc))
                 } else {
                     None
                 }
@@ -56,8 +60,8 @@ impl MediaObject {
         if let Self::Encoded(x) = self { x } else { unreachable!() }
     }
 
-    pub fn encode(self) -> Result<Vec<u8>, FluxError> {
-        encode_object(self, None)
+    pub fn encode(self, limits: &DecodeLimits) -> Result<Vec<u8>, FluxError> {
+        encode_object(self, None, limits)
     }
 
     pub fn encode_first_frame_as(self, format: ImageFormat, limits: &DecodeLimits) -> Result<Vec<u8>, FluxError> {

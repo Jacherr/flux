@@ -13,7 +13,7 @@ pub struct DecodeLimits {
     pub frame_rate_limit: Option<u64>,
     pub video_time_limit: Option<Duration>,
     pub resolution_limit: Option<(u64, u64)>,
-    pub video_decode_permitted: Option<bool>,
+    pub video_decode_permitted: bool,
 }
 
 /// Main media container for Flux. Contains everything needed to process a range of input formats by
@@ -33,7 +33,7 @@ impl MediaContainer {
         Self {
             input_queue: InputQueue::new(),
             limits: DecodeLimits {
-                video_decode_permitted: Some(true),
+                video_decode_permitted: true,
                 ..Default::default()
             },
         }
@@ -72,6 +72,6 @@ impl MediaContainer {
             return Err(FluxError::ResidualImages(self.input_queue.len() as u64));
         }
 
-        next_image.encode()
+        next_image.encode(&self.limits)
     }
 }

@@ -19,6 +19,7 @@ mod flag {
     pub const FLAG_IMAGE_PAGE_LIMIT: &'static str = "page-limit";
     pub const FLAG_INPUT_RESOLUTION_LIMIT: &'static str = "res-limit";
     pub const FLAG_DISABLE_VIDEO_SUPPORT: &'static str = "disable-video-decode";
+    pub const FLAG_IMAGE_INFO: &'static str = "info";
 
     pub const FLAG_MAPPER: LazyCell<HashMap<&'static str, &'static str>> = LazyCell::new(|| {
         let mut h = HashMap::new();
@@ -37,6 +38,7 @@ pub enum ArgType {
     ImagePageLimit(u64),
     InputResolutionLimit((u64, u64)),
     VideoSupportDisabled,
+    Info,
 }
 
 /// Internal metadata and stateful information used by the argument parser.
@@ -141,6 +143,7 @@ impl ArgsHandler {
                 Ok(ArgType::InputResolutionLimit((width, height)))
             },
             flag::FLAG_DISABLE_VIDEO_SUPPORT => Ok(ArgType::VideoSupportDisabled),
+            flag::FLAG_IMAGE_INFO => Ok(ArgType::Info),
             _ => Err(ArgError::UnrecognisedFlag(flag.to_owned())),
         }
     }

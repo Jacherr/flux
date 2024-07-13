@@ -28,11 +28,8 @@ pub fn decode_to_dynamic_images(input: &[u8], limits: &DecodeLimits) -> Result<D
         Type::Webp => decode_webp_to_dynamic_images(input)?,
         Type::Gif => decode_gif_to_dynamic_images(input, limits.frame_limit)?,
         Type::Webm | Type::Mp4 => {
-            if limits.video_decode_permitted == Some(false) {
-                return Err(FluxError::InputMediaError(
-                    "Video support is enabled either by voting at https://vote.jacher.io/topgg (for temporary access) or by becoming a patron."
-                        .to_owned(),
-                ));
+            if !limits.video_decode_permitted {
+                return Err(FluxError::VideoDecodeDisabled);
             }
             decode_video_to_dynamic_images(input, limits)?
         },
@@ -127,10 +124,8 @@ pub fn decode_video_to_dynamic_images(
     buf: &[u8],
     limits: &DecodeLimits,
 ) -> Result<DynamicImagesMediaObject, FluxError> {
-    if !limits.video_decode_permitted.unwrap_or(true) {
-        return Err(FluxError::InputMediaError(
-            "Video decode has been disabled.".to_string(),
-        ));
+    if !limits.video_decode_permitted {
+        return Err(FluxError::VideoDecodeDisabled);
     }
 
     let split = ffmpeg::split_video(buf, limits.clone())?;

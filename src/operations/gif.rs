@@ -16,8 +16,8 @@ impl MediaContainer {
             && get_sig(e) == Some(Type::Gif)
         {
             return Ok(input);
-        } else if let Some(e) = input.try_encoded_video() {
-            return ffmpeg_operations::video_to_gif(e).map(MediaObject::Encoded);
+        } else if let Some(e) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            return ffmpeg_operations::video_to_gif(e?).map(MediaObject::Encoded);
         }
 
         let dyn_images = input.to_dynamic_images(&self.limits)?;

@@ -13,14 +13,14 @@ use crate::processing::media_object::MediaObject;
 
 pub mod gif;
 
-pub fn encode_auto(obj: MediaObject) -> Result<Vec<u8>, FluxError> {
+pub fn encode_auto(obj: MediaObject, limits: &DecodeLimits) -> Result<Vec<u8>, FluxError> {
     let encoded = match obj {
         MediaObject::DynamicImages(image_object) => {
             // we determine filetype to encode to either based on extension on filename provided, or
             // by taking a guess based on presence of multiple frames, audio, ...
             if let Some(ref audio) = image_object.audio {
                 let inner_images = image_object.images.iter().map(|x| x.0.clone()).collect::<Vec<_>>();
-                create_video_from_split(inner_images, audio)
+                create_video_from_split(inner_images, audio, limits)
             } else if image_object.images.len() > 1 {
                 let r#ref = image_object.images.first().unwrap();
 
@@ -63,11 +63,15 @@ pub fn encode_auto(obj: MediaObject) -> Result<Vec<u8>, FluxError> {
     Ok(encoded?)
 }
 
-pub fn encode_object(obj: MediaObject, format: Option<ImageFormat>) -> Result<Vec<u8>, FluxError> {
+pub fn encode_object(
+    obj: MediaObject,
+    format: Option<ImageFormat>,
+    limits: &DecodeLimits,
+) -> Result<Vec<u8>, FluxError> {
     if let Some(_f) = format {
         todo!()
     } else {
-        encode_auto(obj)
+        encode_auto(obj, limits)
     }
 }
 

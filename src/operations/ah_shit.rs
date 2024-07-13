@@ -13,7 +13,7 @@ impl MediaContainer {
 
         // resize to fit
         dyn_images.iter_images_mut(|f, _| f.resize(1280, 720, FilterType::Gaussian));
-        let enc = MediaObject::DynamicImages(dyn_images).encode()?;
+        let enc = MediaObject::DynamicImages(dyn_images).encode(&self.limits)?;
 
         let out = ah_shit(enc)?;
 

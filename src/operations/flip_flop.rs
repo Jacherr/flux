@@ -10,8 +10,8 @@ impl MediaContainer {
     pub fn flip(&self) -> OperationResult {
         let input = self.pop_input()?;
 
-        if let Some(v) = input.try_encoded_video() {
-            let result = ffmpeg_operations::flip_video(v)?;
+        if let Some(v) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            let result = ffmpeg_operations::flip_video(v?)?;
             Ok(MediaObject::Encoded(result))
         } else {
             let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
@@ -28,8 +28,8 @@ impl MediaContainer {
     pub fn flop(&self) -> OperationResult {
         let input = self.pop_input()?;
 
-        if let Some(v) = input.try_encoded_video() {
-            let result = ffmpeg_operations::flop_video(v)?;
+        if let Some(v) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            let result = ffmpeg_operations::flop_video(v?)?;
             Ok(MediaObject::Encoded(result))
         } else {
             let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
