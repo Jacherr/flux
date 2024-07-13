@@ -27,6 +27,7 @@ pub mod meme;
 pub mod ping_pong;
 pub mod resize;
 pub mod reverse;
+pub mod scramble;
 
 pub type OperationResult = Result<MediaObject, FluxError>;
 
@@ -109,6 +110,7 @@ impl MediaContainer {
                 self.ghost(depth)?
             },
             "gif" => self.gif()?,
+            "gif-magik" => self.gif_magik()?,
             "heart-locket" => {
                 let text = options.get("text").map(|x| x.clone());
 
@@ -133,6 +135,7 @@ impl MediaContainer {
             },
             "reverse" => self.reverse()?,
             "rubiks" => self.rubiks()?,
+            "scramble" => self.scramble()?,
             "siren" => self.siren()?,
             "sweden" => self.siren()?,
             "terraria" => self.terraria()?,

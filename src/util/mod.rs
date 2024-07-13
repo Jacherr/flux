@@ -2,6 +2,8 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 
 use rand::Rng;
 
+use crate::processing::dynamic_image_wrapper::DynamicImageWrapper;
+
 pub mod owned_child;
 
 pub fn pad_left(s: String, m: usize, c: char) -> String {
@@ -60,5 +62,21 @@ pub fn collapse_neg(target_limit: isize, current_value: isize) -> usize {
         (current_value % target_limit + target_limit) as usize
     } else {
         (current_value % target_limit) as usize
+    }
+}
+
+pub fn windows2<F>(buf: &mut [DynamicImageWrapper], mut fun: F)
+where
+    F: FnMut(&mut DynamicImageWrapper, &mut DynamicImageWrapper),
+{
+    let mut start = 0;
+    let mut end = 2;
+
+    while end <= buf.len() {
+        let slice = &mut buf[start..end];
+        let (a, b) = slice.split_at_mut(1);
+        fun(&mut a[0], &mut b[0]);
+        start += 1;
+        end += 1;
     }
 }

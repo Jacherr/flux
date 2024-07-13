@@ -9,6 +9,7 @@ use std::time::Duration;
 
 use image::{load_from_memory, DynamicImage};
 use rand::distributions::Alphanumeric;
+use rand::prelude::SliceRandom;
 use rand::{thread_rng, Rng};
 
 use super::filetype::{get_sig, Type};
@@ -16,6 +17,13 @@ use crate::core::error::FluxError;
 use crate::core::media_container::DecodeLimits;
 use crate::util::owned_child::IntoOwnedChild;
 use crate::util::{hash_buffer, pad_left};
+
+struct FfmpegFileDeletionDefer(String);
+impl Drop for FfmpegFileDeletionDefer {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_file(&self.0);
+    }
+}
 
 pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]) -> Result<Vec<u8>, FluxError> {
     let cpus = num_cpus::get().to_string();
@@ -26,18 +34,20 @@ pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]
         .map(char::from)
         .collect::<String>();
 
+    let mut args = Vec::from(["-y", "-hide_banner", "-loglevel", "error"]);
+    args.extend_from_slice(pre_commands);
     let mut body_hasher = DefaultHasher::new();
     input.hash(&mut body_hasher);
 
     let hex = format!("{:x}", body_hasher.finish());
     let out_path = format!("/tmp/{}{}", hex, rand_string);
     let in_path = format!("{}_", out_path);
-
     write(&in_path, input)?;
 
-    let mut args = Vec::from(["-y", "-hide_banner", "-loglevel", "error"]);
-    args.extend_from_slice(pre_commands);
-    args.extend_from_slice(&["-i", &in_path, "-threads", &cpus]);
+    if input.len() > 0 {
+        args.extend_from_slice(&["-i", &in_path, "-threads", &cpus]);
+    }
+
     args.extend_from_slice(commands);
     args.push(&out_path);
 
@@ -469,6 +479,45 @@ pub fn get_video_dimensions(input: &[u8]) -> Result<(usize, usize), FluxError> {
     Ok((parts[0], parts[1]))
 }
 
+pub fn get_video_length(input: &[u8]) -> Result<Duration, FluxError> {
+    let mut body_hasher = DefaultHasher::new();
+    input.hash(&mut body_hasher);
+
+    let hex = format!("{:x}", body_hasher.finish());
+    let in_path = format!("/tmp/{}.mp4", hex);
+
+    write(&in_path, input)?;
+
+    let args = Vec::from([
+        "-show_entries",
+        "format=duration",
+        "-v",
+        "quiet",
+        "-of",
+        "csv=p=0",
+        &in_path,
+    ]);
+
+    let command = Command::new("ffprobe")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .args(&args)
+        .spawn()?
+        .into_owned_child();
+
+    let output = command.wait_with_output()?;
+    remove_file(in_path)?;
+
+    let time = String::from_utf8_lossy(&output.stdout).to_string();
+    let duration = time
+        .trim()
+        .parse::<f32>()
+        .map(|o| Duration::from_millis((o * 1000.0) as u64))
+        .map_err(|_| FluxError::ScriptError("Could not parse video length from ffprobe output".to_string()))?;
+
+    Ok(duration)
+}
+
 pub fn get_video_frame_count(input: &[u8]) -> Result<usize, FluxError> {
     let mut body_hasher = DefaultHasher::new();
     input.hash(&mut body_hasher);
@@ -519,6 +568,11 @@ pub fn get_video_first_frame(input: &[u8]) -> Result<Vec<u8>, FluxError> {
 
 pub mod ffmpeg_operations {
     use std::fs;
+    use std::sync::Mutex;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use anyhow::Context;
+    use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
     use super::*;
 
@@ -738,5 +792,78 @@ pub mod ffmpeg_operations {
             input,
         )
         .map_err(|_| FluxError::CorruptInput("Failed to process audio".to_owned()))
+    }
+
+    pub fn slice_video(input: &[u8], start: &str, time: &str) -> Result<Vec<u8>, FluxError> {
+        run_ffmpeg_command(
+            &["-ss", start, "-t", time, "-f", "mp4"],
+            &["-hide_banner", "-loglevel", "error", "-nostats"],
+            input,
+        )
+    }
+
+    pub fn scramble_video(input: &[u8]) -> Result<Vec<u8>, FluxError> {
+        let mut len_remaining = get_video_length(input)
+            .context("Failed to get video length")?
+            .as_millis();
+        let mut next_start = 0;
+        let mut slice_sections = Vec::new();
+
+        let defers = Arc::new(Mutex::new(Vec::new()));
+
+        while len_remaining > 0 {
+            let next_chunk_len = thread_rng().gen_range(1..500).clamp(0, len_remaining) as u128;
+            len_remaining -= next_chunk_len;
+            next_start += next_chunk_len;
+
+            let chunk_len_secs = next_chunk_len / 1000;
+            let chunk_len_millis_rem = next_chunk_len % 1000;
+            let chunk_len_fmt = format!(
+                "{}.{}",
+                chunk_len_secs,
+                pad_left(chunk_len_millis_rem.to_string(), 3, '0')
+            );
+
+            let next_start_secs = next_start / 1000;
+            let next_start_millis_rem = next_start % 1000;
+            let next_start_fmt = format!(
+                "{}.{}",
+                next_start_secs,
+                pad_left(next_start_millis_rem.to_string(), 3, '0')
+            );
+            slice_sections.push((chunk_len_fmt, next_start_fmt));
+        }
+
+        let mut files = vec![String::new(); slice_sections.len()];
+        files.par_iter_mut().enumerate().try_for_each(|(i, f)| {
+            let (chunk_len_fmt, next_start_fmt) = slice_sections.get(i).unwrap();
+
+            println!("{next_start_fmt},{chunk_len_fmt}");
+
+            let slice = slice_video(input, next_start_fmt, chunk_len_fmt)?;
+
+            let hashed_slice = hash_buffer(&slice);
+            let path = format!("/tmp/{}-{i}.mp4", hashed_slice);
+
+            fs::write(&path, &slice)?;
+            *f = path.clone();
+            defers.lock().unwrap().push(FfmpegFileDeletionDefer(path));
+
+            Ok::<(), FluxError>(())
+        })?;
+
+        files.shuffle(&mut thread_rng());
+
+        let file_list = files.iter().map(|x| format!("file {x}")).collect::<Vec<_>>().join("\n");
+        let list_name = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+        let list_path = format!("/tmp/{list_name}.txt");
+        fs::write(&list_path, &file_list)?;
+        let _list_defer = FfmpegFileDeletionDefer(list_path.clone());
+
+        run_ffmpeg_command(
+            &["-i", &list_path, "-f", "mp4"],
+            &["-f", "concat", "-hide_banner", "-loglevel", "error", "-safe", "0"],
+            &[],
+        )
     }
 }
