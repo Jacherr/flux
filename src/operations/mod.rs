@@ -19,6 +19,7 @@ pub mod fisheye;
 pub mod flip_flop;
 pub mod frame_shift;
 pub mod frames;
+pub mod general;
 pub mod ghost;
 pub mod gif;
 pub mod globe;
@@ -152,6 +153,8 @@ impl MediaContainer {
             "terraria" => self.terraria()?,
             "toaster" => self.toaster()?,
             "valentine" => self.valentine()?,
+            // general ops
+            "threshold" => self.threshold(option_get_f32(&options, "threshold")?)?,
             _ => Err(FluxError::ParameterError(format!("Unrecognised operation {operation}")))?,
         })
     }

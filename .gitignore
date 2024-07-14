@@ -19,3 +19,4 @@ Cargo.lock
 /target
 /build
 profile.json
+/test

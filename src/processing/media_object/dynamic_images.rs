@@ -28,7 +28,7 @@ impl DynamicImagesMediaObject {
         self
     }
 
-    pub fn iter_images_mut_falliable<
+    pub fn iter_images_mut_fallible<
         T: Fn(&mut DynamicImage, usize) -> Result<DynamicImage, FluxError> + Send + Sync,
     >(
         &mut self,
@@ -48,7 +48,7 @@ impl DynamicImagesMediaObject {
     }
 
     pub fn update_quality(&mut self, quality: u8) -> Result<(), FluxError> {
-        self.iter_images_mut_falliable(|image, _| {
+        self.iter_images_mut_fallible(|image, _| {
             let mut buf = Vec::new();
             let mut encoder = JpegEncoder::new_with_quality(&mut buf, quality);
             encoder.encode(
