@@ -28,6 +28,7 @@ pub mod info;
 pub mod magik;
 pub mod makesweet;
 pub mod meme;
+pub mod neon;
 pub mod ping_pong;
 pub mod resize;
 pub mod reverse;
@@ -58,6 +59,10 @@ fn option_get_f32(options: &HashMap<String, String>, name: &str) -> anyhow::Resu
             })
         })
         .transpose()
+}
+
+fn option_get_str<'a>(options: &'a HashMap<String, String>, name: &str) -> Option<&'a str> {
+    options.get(name).map(|x| x.as_str())
 }
 
 impl MediaContainer {
@@ -130,6 +135,7 @@ impl MediaContainer {
 
                 self.meme(top, bottom)?
             },
+            "neon" => self.neon()?,
             "ping-pong" => self.ping_pong()?,
             "resize" => {
                 let width = option_get_u64(&options, "width")?;
@@ -155,6 +161,8 @@ impl MediaContainer {
             "valentine" => self.valentine()?,
             // general ops
             "threshold" => self.threshold(option_get_f32(&options, "threshold")?)?,
+            "channels" => self.channels(option_get_str(&options, "keep"))?,
+            "edges" => self.edges()?,
             _ => Err(FluxError::ParameterError(format!("Unrecognised operation {operation}")))?,
         })
     }
