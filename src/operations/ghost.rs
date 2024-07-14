@@ -1,7 +1,7 @@
 use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
 use crate::processing::css_framebuffer::ops;
-use crate::processing::framebuffer::FrameBufferBorrowed;
+use crate::processing::framebuffer::FrameBufferOwned;
 use crate::processing::media_object::MediaObject;
 
 use super::OperationResult;
@@ -23,11 +23,11 @@ impl MediaContainer {
         dyn_images.iter_images_mut(|f, i| {
             let mut next_div = 2;
 
-            let mut fb = FrameBufferBorrowed::new_from_dyn_image(f);
+            let mut fb = FrameBufferOwned::new_from_dyn_image(f);
 
             for idx in 0..depth {
                 let ghost = c.get_circular_neg(i as isize - (idx as isize + 1));
-                let mut ghost_fb = FrameBufferBorrowed::new_from_dyn_image(&ghost.0);
+                let mut ghost_fb = FrameBufferOwned::new_from_dyn_image(&ghost.0);
                 ops::filter::opacity(ghost_fb.fb_mut(), 1.0 / next_div as f32);
 
                 ops::overlay::blend(fb.fb_mut(), ghost_fb.fb(), 0, 0);

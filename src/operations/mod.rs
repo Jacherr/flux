@@ -116,6 +116,7 @@ impl MediaContainer {
             "gif" => self.gif()?,
             "gif-magik" => self.gif_magik()?,
             "globe" => self.globe()?,
+            "grayscale" => self.grayscale()?,
             "heart-locket" => {
                 let text = options.get("text").map(|x| x.clone());
 

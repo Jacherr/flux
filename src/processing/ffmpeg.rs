@@ -36,8 +36,8 @@ pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]
 
     let hex = format!("{:x}", body_hasher.finish());
     let out_file = TmpFile::new(format!("{}{}", hex, rand_string));
-    let in_file = TmpFile::new(format!("{}_", out_file.path()));
-    in_file.write(input)?;
+    let in_file = TmpFile::new(format!("{}_", out_file.filename()));
+    in_file.write(input).context("Failed to write input file")?;
 
     if input.len() > 0 {
         args.extend_from_slice(&["-i", in_file.path(), "-threads", &cpus]);
