@@ -20,6 +20,7 @@ High-level command-line media processing tool written in Rust. Designed to inter
 - Clone the repository: `git clone https://github.com/jacherr/flux --recurse-submodules`
 - `cd` to the project: `cd flux`
 - Build flux: `cargo build --release` (You may omit the `--release` flag to build with debug symbols)
+- Once built, the `flux` executable will be in `./target/release/flux` (or `./target/debug/flux` if built with debug symbols). From here, you may move the executable to somewhere in the PATH, such as `/usr/local/bin`.
 
 **NOTE**: If you get a linker error during compile, the most likely cause is that the libvips objects failed to compile. Make sure libvips is up to date. You can also try manually compiling these objects to see if this is the cause, e.g., ``gcc -fPIC -Wall -O2 -shared ./vips/v_text.c -g -o ./build/libv_text.so `pkg-config vips --cflags --libs` ``
 
@@ -34,5 +35,7 @@ Basic usage is `flux -i [input image file path] -o [operation name] [output imag
 For example, `flux -i input.gif -o reverse reverse.gif`.
 
 For operations that take parameters, such as `ghost` (with takes a `depth` parameter), you can provide these in the operation e.g.: `ghost[depth=10]`.
+
+Operations can be chained. When an operation is complete, its output is pushed to the input queue. When an operation runs, it pops from the queue however many inputs it needs. When outputting the final file, the input queue must be empty or flux will exit with an error.
 
 A full list of operations and other flags will come later, once Flux is more complete.
