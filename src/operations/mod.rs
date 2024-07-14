@@ -30,6 +30,7 @@ pub mod makesweet;
 pub mod meme;
 pub mod neon;
 pub mod ping_pong;
+pub mod posterize;
 pub mod resize;
 pub mod reverse;
 pub mod scramble;
@@ -137,6 +138,7 @@ impl MediaContainer {
             },
             "neon" => self.neon()?,
             "ping-pong" => self.ping_pong()?,
+            "posterize" => self.posterize(option_get_str(&options, "cols").unwrap())?,
             "resize" => {
                 let width = option_get_u64(&options, "width")?;
                 let height = option_get_u64(&options, "height")?;
