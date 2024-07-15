@@ -1,5 +1,5 @@
 #include <vips/vips.h>
-#include "v_util.c"
+#include "flux_v_util.c"
 
 int v_generate_caption_header(char **buf, size_t *size, size_t *height, size_t width, char* text) {
 	VipsImage *image;

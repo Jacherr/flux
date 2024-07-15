@@ -20,14 +20,12 @@ High-level command-line media processing tool written in Rust. Designed to inter
 - Clone the repository: `git clone https://github.com/jacherr/flux --recurse-submodules`
 - `cd` to the project: `cd flux`
 - Build flux: `cargo build --release` (You may omit the `--release` flag to build with debug symbols)
-- Once built, the `flux` executable will be in `./target/release/flux` (or `./target/debug/flux` if built with debug symbols). From here, you may move the executable to somewhere in the PATH, such as `/usr/local/bin`.
+- Once built, Flux can be installed in `/usr/local` by using the `./install.sh` script (must be superuser). To uninstall, use `./uninstall.sh` (also as superuser).
 
-**NOTE**: If you get a linker error during compile, the most likely cause is that the libvips objects failed to compile. Make sure libvips is up to date. You can also try manually compiling these objects to see if this is the cause, e.g., ``gcc -fPIC -Wall -O2 -shared ./vips/v_text.c -g -o ./build/libv_text.so `pkg-config vips --cflags --libs` ``
+**NOTE**: If you get a linker error during compile, the most likely cause is that the libvips objects failed to compile. Make sure libvips is up to date. You can also try manually compiling these objects to see if this is the cause, e.g., ``gcc -fPIC -Wall -O2 -shared ./vips/flux_v_text.c -g -o ./build/libflux_v_text.so `pkg-config vips --cflags --libs` ``
 
 Once built, you may need to add `./build` to your ldconfig or move the compiled shared objects to somewhere in `/usr` (such as `/usr/local/lib`) where they are searched for.
 Alternatively, you can pass the env variable `LD_LIBRARY_PATH=./build` when running flux. Otherwise, you will get an error on execution saying that the shared objects cannot be found.
-
-TODO: Create an install script which automatically moves and updates these shared objects?
 
 ## Usage
 Basic usage is `flux -i [input image file path] -o [operation name] [output image file path]`.

@@ -1,5 +1,5 @@
 #include <vips/vips.h>
-#include "v_util.c"
+#include "flux_v_util.c"
 
 int v_gravity(char *input, size_t len, char **output, size_t *size, size_t width, size_t height)
 {

@@ -1,5 +1,5 @@
 #include <vips/vips.h>
-#include "v_util.c"
+#include "flux_v_util.c"
 
 int v_vips_init()
 {
