@@ -1,4 +1,5 @@
 use std::env;
+use std::fs::read_to_string;
 use std::process::Command;
 
 fn main() {
@@ -28,5 +29,26 @@ fn main() {
 
         println!("cargo:rerun-if-changed=natives/{}", file);
         println!("cargo:rustc-link-lib={}", &file[..file.len() - 2]);
+
+        let output = match Command::new("git").args(&["rev-parse", "--short", "HEAD"]).output() {
+            Ok(o) => String::from_utf8_lossy(&o.stdout).to_string(),
+            Err(_) => "Unknown".to_owned(),
+        };
+        println!("cargo:rustc-env=FLUX_GIT_HASH={output}");
+
+        let c;
+        let version = match read_to_string(format!("{workspace}/Cargo.toml")) {
+            Ok(s) => {
+                c = s.clone();
+                c.split("\n")
+                    .find(|x| x.trim().starts_with("version ="))
+                    .map(|v| v.split(" ").nth(2))
+                    .flatten()
+                    .map(|v| &v[1..v.len() - 1])
+                    .unwrap_or("Unknown")
+            },
+            Err(_) => "Unknown",
+        };
+        println!("cargo:rustc-env=FLUX_VERSION={version}");
     }
 }

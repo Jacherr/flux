@@ -85,7 +85,7 @@ fn main() -> ExitCode {
 
         match state {
             Ok(s) => {
-                if s == StepAction::OutputWritten || s == StepAction::MediaInfo {
+                if s == StepAction::OutputWritten || s == StepAction::MediaInfo || s == StepAction::PrintVersion {
                     break ExitCode::SUCCESS;
                 }
             },

@@ -1,5 +1,3 @@
-use image::DynamicImage;
-
 use crate::core::media_container::MediaContainer;
 use crate::processing::media_object::MediaObject;
 

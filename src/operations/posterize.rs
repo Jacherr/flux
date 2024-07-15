@@ -1,4 +1,4 @@
-use image::{DynamicImage, GenericImage, Rgba};
+use image::{GenericImage, Rgba};
 
 use crate::core::media_container::MediaContainer;
 use crate::processing::media_object::MediaObject;

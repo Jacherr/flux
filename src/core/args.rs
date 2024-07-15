@@ -20,11 +20,13 @@ mod flag {
     pub const FLAG_INPUT_RESOLUTION_LIMIT: &'static str = "res-limit";
     pub const FLAG_DISABLE_VIDEO_SUPPORT: &'static str = "disable-video-decode";
     pub const FLAG_IMAGE_INFO: &'static str = "info";
+    pub const FLAG_VERSION: &'static str = "version";
 
     pub const FLAG_MAPPER: LazyCell<HashMap<&'static str, &'static str>> = LazyCell::new(|| {
         let mut h = HashMap::new();
-        h.insert("o", "operation");
-        h.insert("i", "input");
+        h.insert("o", FLAG_OPERATION);
+        h.insert("i", FLAG_INPUT);
+        h.insert("v", FLAG_VERSION);
         h
     });
 }
@@ -39,21 +41,26 @@ pub enum ArgType {
     InputResolutionLimit((u64, u64)),
     VideoSupportDisabled,
     Info,
+    Version,
 }
 
 /// Internal metadata and stateful information used by the argument parser.
 #[derive(Clone)]
-struct ArgsMetaInternal {}
+struct ArgsMetaInternal {
+    version_flag_valid: bool,
+}
 impl ArgsMetaInternal {
     pub fn new() -> Self {
-        Self {}
+        Self {
+            version_flag_valid: true,
+        }
     }
 }
 
 /// Accepts incoming std::env::Args and steps through them as needed.
 pub struct ArgsHandler {
     args: Rc<RefCell<Args>>,
-    meta: ArgsMetaInternal,
+    meta: Rc<RefCell<ArgsMetaInternal>>,
 }
 impl ArgsHandler {
     pub fn new(args: Args) -> Self {
@@ -66,7 +73,7 @@ impl ArgsHandler {
 
         ArgsHandler {
             args,
-            meta: ArgsMetaInternal::new(),
+            meta: Rc::new(RefCell::new(ArgsMetaInternal::new())),
         }
     }
 
@@ -144,6 +151,7 @@ impl ArgsHandler {
             },
             flag::FLAG_DISABLE_VIDEO_SUPPORT => Ok(ArgType::VideoSupportDisabled),
             flag::FLAG_IMAGE_INFO => Ok(ArgType::Info),
+            flag::FLAG_VERSION => Ok(ArgType::Version),
             _ => Err(ArgError::UnrecognisedFlag(flag.to_owned())),
         }
     }
@@ -195,6 +203,14 @@ impl ArgsHandler {
         } else {
             Ok((operation.to_owned(), HashMap::new()))
         }
+    }
+
+    pub fn set_version_flag_valid(&self, validity: bool) {
+        self.meta.borrow_mut().version_flag_valid = validity;
+    }
+
+    pub fn version_flag_valid(&self) -> bool {
+        self.meta.borrow().version_flag_valid
     }
 }
 

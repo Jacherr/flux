@@ -5,7 +5,7 @@ High-level command-line media processing tool written in Rust. Designed to inter
 ## Building
 
 ### Prerequisites
-- You must have [Rust](https://rust-lang.org) installed.
+- You must have [Rust](https://rust-lang.org) installed. The toolchain is selected using the `rust-toolchain` file when compiling and you do not need to install a specify one manually.
 - You ideally should have Git installed.
 - Building Flux is only tested on, and written for, Linux. It may or may not work on other platforms.
 - You will need gcc to compile the native libvips objects.

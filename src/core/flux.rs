@@ -25,6 +25,8 @@ pub enum StepAction {
     MetaPropertySet(&'static str),
     /// Information about the next input has been requested. Exit.
     MediaInfo,
+    /// Version information was printed.
+    PrintVersion,
 }
 
 /// Main stateful struct for the current Flux instance.
@@ -44,13 +46,6 @@ impl Flux {
         }
     }
 
-    /// Validates arguments before processing, to ensure that there was nothing weird supplied.
-    pub fn validate_args(&self) -> Result<(), FluxError> {
-        let _args = self.args_handler.fork();
-
-        Ok(())
-    }
-
     /// Steps through this instance by consuming the next input argument(s) and actioning upon it.
     pub fn step(&mut self) -> Result<StepAction, FluxError> {
         // if we already wrote the output theres nothing left to do
@@ -66,11 +61,13 @@ impl Flux {
                 let data = self.read_input(&input)?;
                 self.media_container.push_input(MediaObject::Encoded(data));
                 self.previous_action = Some(StepAction::InputConsumed);
+                self.args_handler.set_version_flag_valid(false);
             },
             ArgType::Operation(operation) => {
                 // operation string also contains options in the form of "operation[x=1:y=2:z=whatever]"
                 self.media_container.handle_operation(operation.clone())?;
                 self.previous_action = Some(StepAction::OperationPerformed(operation));
+                self.args_handler.set_version_flag_valid(false);
             },
             ArgType::OutputPath(output) => {
                 debug!("Writing output to {output}");
@@ -78,24 +75,42 @@ impl Flux {
                 let encoded = self.media_container.encode_next()?;
                 write(output, encoded)?;
                 self.previous_action = Some(StepAction::OutputWritten);
+                self.args_handler.set_version_flag_valid(false);
             },
             ArgType::ImagePageLimit(lim) => {
                 self.media_container.limits.frame_limit = Some(lim);
                 self.previous_action = Some(StepAction::MetaPropertySet("page-limit"));
+                self.args_handler.set_version_flag_valid(false);
             },
             ArgType::InputResolutionLimit((w, h)) => {
                 self.media_container.limits.resolution_limit = Some((w, h));
                 self.previous_action = Some(StepAction::MetaPropertySet("resolution-limit"));
+                self.args_handler.set_version_flag_valid(false);
             },
             ArgType::VideoSupportDisabled => {
                 self.media_container.limits.video_decode_permitted = false;
                 self.previous_action = Some(StepAction::MetaPropertySet("video-decode-disabled"));
+                self.args_handler.set_version_flag_valid(false);
             },
             ArgType::Info => {
                 let info = self.media_container.info()?;
                 let json = to_string(&info).context("Failed to serialize info output")?;
                 println!("{json}");
                 self.previous_action = Some(StepAction::MediaInfo);
+                self.args_handler.set_version_flag_valid(false);
+            },
+            ArgType::Version => {
+                if !self.args_handler.version_flag_valid() {
+                    return Err(FluxError::Args(super::error::ArgError::UnrecognisedFlag(
+                        "version".to_string(),
+                    )));
+                }
+
+                let git_hash = option_env!("FLUX_GIT_HASH").unwrap_or("Unknown");
+                let version = option_env!("FLUX_VERSION").unwrap_or("Unknown");
+
+                println!("flux {version} (commit {git_hash})");
+                self.previous_action = Some(StepAction::PrintVersion)
             },
         }
 
