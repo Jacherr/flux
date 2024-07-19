@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
 use bloom::BloomOptions;
 use resize::ResizeOptions;
 
@@ -25,9 +24,12 @@ pub mod gif;
 pub mod globe;
 pub mod grayscale;
 pub mod info;
+pub mod invert;
+pub mod jpeg;
 pub mod magik;
 pub mod makesweet;
 pub mod meme;
+pub mod motivate;
 pub mod neon;
 pub mod ping_pong;
 pub mod posterize;
@@ -38,25 +40,47 @@ pub mod speed;
 
 pub type OperationResult = Result<MediaObject, FluxError>;
 
-fn option_get_u64(options: &HashMap<String, String>, name: &str) -> anyhow::Result<Option<u64>> {
+fn option_get_bool(options: &HashMap<String, String>, name: &str) -> Result<bool, FluxError> {
+    let op = options.get(name);
+
+    if let Some(op) = op {
+        if op == "1" {
+            Ok(true)
+        } else if op == "0" {
+            Ok(false)
+        } else {
+            Err(FluxError::ParameterError(format!(
+                "Invalid value {op} for option {name}: expected either 0 or 1 "
+            )))
+        }
+    } else {
+        Ok(false)
+    }
+}
+
+fn option_get_u64(options: &HashMap<String, String>, name: &str) -> Result<Option<u64>, FluxError> {
     options
         .get(name)
         .map(|x| {
-            x.parse::<u64>()
-                .with_context(|| format!("Failed to parse {name} (invalid u64 {})", options.get(name).unwrap()))
+            x.parse::<u64>().map_err(|_| {
+                FluxError::ParameterError(format!(
+                    "Failed to parse {name} (invalid u64 {})",
+                    options.get(name).unwrap()
+                ))
+            })
         })
         .transpose()
 }
 
-fn option_get_f32(options: &HashMap<String, String>, name: &str) -> anyhow::Result<Option<f32>> {
+fn option_get_f32(options: &HashMap<String, String>, name: &str) -> Result<Option<f32>, FluxError> {
     options
         .get(name)
         .map(|x| {
-            x.parse::<f32>().with_context(|| {
-                format!(
+            x.parse::<f32>().map_err(|_| {
+                FluxError::ParameterError(format!(
                     "Failed to parse {name} (invalid float32 {})",
                     options.get(name).unwrap()
-                )
+                ))
             })
         })
         .transpose()
@@ -100,8 +124,10 @@ impl MediaContainer {
                 let text = options.get("text").ok_or(FluxError::ParameterError(
                     "Missing required option text for operation caption".to_owned(),
                 ))?;
+                let bottom = option_get_bool(&options, "bottom")?;
+                let black = option_get_bool(&options, "black")?;
 
-                self.caption(&text[..])?
+                self.caption(&text[..], bottom, black)?
             },
             "circuitboard" => self.circuitboard()?,
             "deepfry" => self.deepfry()?,
@@ -129,12 +155,24 @@ impl MediaContainer {
 
                 self.heart_locket(text)?
             },
+            "invert" => self.invert()?,
+            "jpeg" => {
+                let quality = option_get_u64(&options, "quality")?;
+
+                self.jpeg(quality)?
+            },
             "magik" => self.magik()?,
             "meme" => {
                 let top = options.get("top").map(|x| x.clone());
                 let bottom = options.get("bottom").map(|x| x.clone());
 
                 self.meme(top, bottom)?
+            },
+            "motivate" => {
+                let top = options.get("top").map(|x| x.clone());
+                let bottom = options.get("bottom").map(|x| x.clone());
+
+                self.motivate(top, bottom)?
             },
             "neon" => self.neon()?,
             "ping-pong" => self.ping_pong()?,

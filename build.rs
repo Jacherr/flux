@@ -6,7 +6,12 @@ fn main() {
     const OUT_DIR: &str = "build";
     const C_FILE_DIR: &str = "vips";
 
-    const C_FILES: &[&str] = &["flux_v_text.c", "flux_v_vips_util.c", "flux_v_conversion.c"];
+    const C_FILES: &[&str] = &[
+        "flux_v_text.c",
+        "flux_v_vips_util.c",
+        "flux_v_conversion.c",
+        "flux_v_edgedetect.c",
+    ];
 
     let _ = std::fs::create_dir(&format!("./{}", OUT_DIR));
     let workspace = env::var("CARGO_MANIFEST_DIR").unwrap();

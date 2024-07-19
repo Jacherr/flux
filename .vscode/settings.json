@@ -10,4 +10,7 @@
         "GIO_MODULE_DIR": null,
     },
     "cmake.configureOnOpen": false,
+    "[c]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
 }

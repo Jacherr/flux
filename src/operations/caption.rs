@@ -11,20 +11,27 @@ use crate::vips::vips_generate_caption;
 use super::OperationResult;
 
 impl MediaContainer {
-    pub fn caption(&self, text: &str) -> OperationResult {
+    pub fn caption(&self, text: &str, bottom: bool, black: bool) -> OperationResult {
         let input = self.pop_input()?;
 
         if let Some(input) = input.try_encoded_video(self.limits.video_decode_permitted) {
             let input = input?;
             let (w, _) = get_video_dimensions(input)?;
-            let text = vips_generate_caption(text, w)?;
-            let res = ffmpeg_operations::caption_video(input, text)?;
+            let mut text = vips_generate_caption(text, w)?;
+            if black {
+                text.invert();
+            }
+
+            let res = ffmpeg_operations::caption_video(input, text, bottom)?;
 
             Ok(MediaObject::Encoded(res))
         } else {
             let mut x = input.to_dynamic_images(&self.limits)?.into_owned();
             let (w, h) = x.images.first().unwrap().0.dimensions();
-            let text = vips_generate_caption(text, w as usize)?;
+            let mut text = vips_generate_caption(text, w as usize)?;
+            if black {
+                text.invert();
+            }
 
             let text_owned_fb = FrameBufferOwned::new_from_dyn_image(&text);
             let text_fb = text_owned_fb.fb();
@@ -33,8 +40,14 @@ impl MediaContainer {
                 let img_fb = FrameBufferOwned::new_from_dyn_image(f);
 
                 let mut canvas = framebuffer::new(w as usize, (h + text.height()) as usize);
-                ops::overlay::replace(&mut canvas, text_fb, 0, 0);
-                ops::overlay::replace(&mut canvas, img_fb.fb(), 0, text.height() as isize);
+
+                if bottom {
+                    ops::overlay::replace(&mut canvas, img_fb.fb(), 0, 0);
+                    ops::overlay::replace(&mut canvas, text_fb, 0, img_fb.height as isize);
+                } else {
+                    ops::overlay::replace(&mut canvas, text_fb, 0, 0);
+                    ops::overlay::replace(&mut canvas, img_fb.fb(), 0, text.height() as isize);
+                };
 
                 let w = canvas.width as u32;
                 let h = canvas.height as u32;

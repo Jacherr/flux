@@ -20,6 +20,7 @@ use signal_hook::iterator::Signals;
 use time::format_description;
 use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::EnvFilter;
+use vips::ffi::v_vips_init;
 
 pub mod core;
 pub mod operations;
@@ -40,6 +41,10 @@ fn main() -> ExitCode {
 
     let args = std::env::args();
     let mut flux = Flux::new(args);
+
+    unsafe {
+        v_vips_init();
+    }
 
     // handle SIGTERM for graceful shutdown of child processes (e.g. ffmpeg)
     let mut signals = Signals::new(&[SIGTERM]).unwrap();

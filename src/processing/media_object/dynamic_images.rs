@@ -21,7 +21,7 @@ impl DynamicImagesMediaObject {
         func: T,
     ) -> &mut Self {
         self.images
-            .iter_mut()
+            .par_iter_mut()
             .enumerate()
             .for_each(|(i, img)| img.0 = func(&mut img.0, i));
 

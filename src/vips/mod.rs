@@ -1,10 +1,7 @@
 use std::ffi::{c_int, CStr, CString};
 use std::ptr::{null_mut, slice_from_raw_parts};
 
-use ffi::{
-    v_g_free, v_generate_caption_header, v_generate_heart_locket_text, v_generate_meme_text, v_generate_motivate_text,
-    v_get_error, v_gravity, v_transcode_to, v_vips_init,
-};
+use ffi::*;
 use image::{DynamicImage, ImageBuffer, Rgba};
 
 use crate::core::error::FluxError;
@@ -201,6 +198,73 @@ pub fn vips_generate_heart_locket_text(text: &str, width: usize, height: usize) 
 
     let image: ImageBuffer<Rgba<u8>, Vec<u8>> =
         ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(width as u32, height as u32, buffer).unwrap();
+
+    Ok(DynamicImage::ImageRgba8(image))
+}
+
+pub fn vips_canny(input: &[u8], width: usize, height: usize, sigma: f64) -> Result<DynamicImage, FluxError> {
+    unsafe { v_vips_init() };
+
+    let mut buf = std::ptr::null_mut::<u8>();
+    let mut size: usize = 0;
+    let res = unsafe {
+        v_canny(
+            input.as_ptr(),
+            input.len(),
+            width as c_int,
+            height as c_int,
+            &mut buf,
+            &mut size,
+            sigma,
+        )
+    };
+
+    if res != 0 {
+        return Err(FluxError::ScriptError(format!(
+            "error performing edge detection: {}",
+            vips_get_error()
+        )));
+    }
+
+    let buffer = unsafe { (*slice_from_raw_parts(buf, size)).to_owned() };
+    unsafe { v_g_free(buf as *const ()) };
+
+    let image: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(width as u32, height as u32, buffer)
+            .ok_or(FluxError::ScriptError("Failed to create image".to_owned()))?;
+
+    Ok(DynamicImage::ImageRgba8(image))
+}
+
+pub fn vips_sobel(input: &[u8], width: usize, height: usize) -> Result<DynamicImage, FluxError> {
+    unsafe { v_vips_init() };
+
+    let mut buf = std::ptr::null_mut::<u8>();
+    let mut size: usize = 0;
+    let res = unsafe {
+        v_sobel(
+            input.as_ptr(),
+            input.len(),
+            width as c_int,
+            height as c_int,
+            &mut buf,
+            &mut size,
+        )
+    };
+
+    if res != 0 {
+        return Err(FluxError::ScriptError(format!(
+            "error performing edge detection: {}",
+            vips_get_error()
+        )));
+    }
+
+    let buffer = unsafe { (*slice_from_raw_parts(buf, size)).to_owned() };
+    unsafe { v_g_free(buf as *const ()) };
+
+    let image: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::<Rgba<u8>, Vec<u8>>::from_raw(width as u32, height as u32, buffer)
+            .ok_or(FluxError::ScriptError("Failed to create image".to_owned()))?;
 
     Ok(DynamicImage::ImageRgba8(image))
 }

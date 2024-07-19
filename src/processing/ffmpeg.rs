@@ -315,7 +315,7 @@ pub fn video_to_dynamic_images(input: &[u8], limits: &DecodeLimits) -> Result<Ve
     for path in new_paths_sorted {
         if !path.is_empty() {
             let file = read(path)?;
-            images.push(load_from_memory(&file)?);
+            images.push(DynamicImage::ImageRgba8(load_from_memory(&file)?.into_rgba8()));
         }
     }
 
@@ -695,27 +695,44 @@ pub mod ffmpeg_operations {
         }
     }
 
-    pub fn caption_video(input: &[u8], text_image: DynamicImage) -> Result<Vec<u8>, FluxError> {
+    pub fn caption_video(input: &[u8], text_image: DynamicImage, bottom: bool) -> Result<Vec<u8>, FluxError> {
         let text_image_height = text_image.height();
 
         let png_path = format!("/tmp/{}_caption_png", hash_buffer(input));
         text_image.save_with_format(&png_path, image::ImageFormat::Png)?;
 
-        let output = run_ffmpeg_command(
-            &[
-                "-i",
-                &png_path,
-                "-filter_complex",
-                &format!(
-                    "[0]pad=w=iw:h={0}+ih:x=0:y={0}:color=black,overlay=0:0",
-                    text_image_height
-                ),
-                "-f",
-                "mp4",
-            ],
-            &[],
-            input,
-        )?;
+        let output = if bottom {
+            let d = get_video_dimensions(input)?.1;
+
+            run_ffmpeg_command(
+                &[
+                    "-i",
+                    &png_path,
+                    "-filter_complex",
+                    &format!("[0] pad=w=iw:h={text_image_height}+ih:x=0:y=0:color=black,overlay=0:{d}"),
+                    "-f",
+                    "mp4",
+                ],
+                &[],
+                input,
+            )?
+        } else {
+            run_ffmpeg_command(
+                &[
+                    "-i",
+                    &png_path,
+                    "-filter_complex",
+                    &format!(
+                        "[0] pad=w=iw:h={0}+ih:x=0:y={0}:color=black,overlay=0:0",
+                        text_image_height
+                    ),
+                    "-f",
+                    "mp4",
+                ],
+                &[],
+                input,
+            )?
+        };
 
         remove_file(&png_path)?;
 

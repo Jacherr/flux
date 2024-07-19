@@ -1,7 +1,8 @@
-use image::DynamicImage;
+use image::GenericImageView;
 
 use crate::core::media_container::MediaContainer;
 use crate::processing::media_object::MediaObject;
+use crate::vips::vips_sobel;
 
 use super::OperationResult;
 
@@ -11,6 +12,7 @@ impl MediaContainer {
 
         let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
 
+        /*
         dyn_images.iter_images_mut(|f, _| {
             let edges = imageproc::edges::canny(&f.to_luma8(), 50.0, 100.0);
             let more_edges = imageproc::edges::canny(&f.to_luma8(), 25.0, 50.0);
@@ -25,8 +27,14 @@ impl MediaContainer {
                 }
             }
 
-            DynamicImage::from(t)
-        });
+            DynamicImage::ImageRgba16(t).to_rgba8().into()
+        });*/
+
+        dyn_images.iter_images_mut_fallible(|f, _| {
+            let (w, h) = f.dimensions();
+            let raw = f.as_bytes();
+            vips_sobel(raw, w as usize, h as usize)
+        })?;
 
         Ok(MediaObject::DynamicImages(dyn_images))
     }

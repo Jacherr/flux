@@ -29,7 +29,7 @@ int v_transcode_to(char *input, size_t len, char **output, size_t *size, char *f
 
 char *v_get_error()
 {
-	return vips_error_buffer_copy();
+	return vips_error_buffer();
 }
 
 void v_g_free(gpointer ptr)

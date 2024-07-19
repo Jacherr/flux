@@ -1,7 +1,8 @@
 #include <vips/vips.h>
 #include "flux_v_util.c"
 
-int v_generate_caption_header(char **buf, size_t *size, size_t *height, size_t width, char* text) {
+int v_generate_caption_header(char **buf, size_t *size, size_t *height, size_t width, char *text)
+{
 	VipsImage *image;
 
 	// get size params for text gen
@@ -104,14 +105,15 @@ int v_generate_meme_text(char **buf, size_t *size, size_t height, size_t width, 
 	return 0;
 }
 
-int v_generate_motivate_text(char **buf, size_t *size, size_t *height, size_t width, char *text, size_t text_size, int pad_height) {
+int v_generate_motivate_text(char **buf, size_t *size, size_t *height, size_t width, char *text, size_t text_size, int pad_height)
+{
 	VipsImage *image;
 	char *font;
 	asprintf(&font, "Twemoji Color Emoji,Times %ipx", text_size);
 
 	RETURN_NONZERO(
 		vips_text(&image, text, "font", font, "rgba", 1, "width", width, "align", VIPS_ALIGN_CENTRE, NULL))
-	
+
 	int new_height = pad_height ? vips_image_get_height(image) + (width / 10) : vips_image_get_height(image);
 
 	// extend image to correct dimensions
@@ -142,13 +144,14 @@ int v_generate_motivate_text(char **buf, size_t *size, size_t *height, size_t wi
 	return 0;
 }
 
-int v_generate_heart_locket_text(char **buf, size_t *size, size_t height, size_t width, char *text) {
+int v_generate_heart_locket_text(char **buf, size_t *size, size_t height, size_t width, char *text)
+{
 	VipsImage *image;
 	char *font;
 	asprintf(&font, "Twemoji Color Emoji,Times");
 
 	RETURN_NONZERO(
-		vips_text(&image, text, "font", font, "rgba", 1, "width", width/2, "height", height/2, "align", VIPS_ALIGN_CENTRE, NULL))
+		vips_text(&image, text, "font", font, "rgba", 1, "width", width / 2, "height", height / 2, "align", VIPS_ALIGN_CENTRE, NULL))
 
 	// extend image to correct dimensions
 	RETURN_NONZERO(
