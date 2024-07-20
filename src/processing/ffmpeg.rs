@@ -655,6 +655,10 @@ pub mod ffmpeg_operations {
         vf_manipulate(input, "negate")
     }
 
+    pub fn pixelize_video(input: &[u8], w: u64, h: u64) -> Result<Vec<u8>, FluxError> {
+        filter_manipulate_fmt(input, &format!("pixelize=w={w}:h={h}"), "mp4")
+    }
+
     pub fn bitcrush_audio(input: &[u8]) -> Result<Vec<u8>, FluxError> {
         filter_manipulate_fmt(input, "acrusher=bits=2:mode=log:aa=1:samples=128", "mp3")
     }

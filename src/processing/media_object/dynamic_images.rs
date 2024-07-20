@@ -95,4 +95,10 @@ impl DynamicImagesMediaObject {
         let corrected_index = collapse_neg(self.images.len() as isize, index);
         self.images.get(corrected_index).unwrap()
     }
+
+    pub fn maybe_first(&self) -> Result<&DynamicImageWrapper, FluxError> {
+        self.images
+            .first()
+            .ok_or(FluxError::CorruptInput("Input has no frames".to_owned()))
+    }
 }

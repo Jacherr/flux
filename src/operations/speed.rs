@@ -20,7 +20,7 @@ impl MediaContainer {
         let len = dyn_images.images.len();
 
         let rm_frames;
-        if dyn_images.images.first().unwrap().1.unwrap_or_default().as_millis() == 20 && multiplier > 1.0 {
+        if dyn_images.maybe_first()?.1.unwrap_or_default().as_millis() == 20 && multiplier > 1.0 {
             rm_frames = true;
         } else {
             rm_frames = false;

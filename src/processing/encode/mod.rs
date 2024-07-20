@@ -89,7 +89,13 @@ pub fn encode_first_frame_as(
                 .ok_or(FluxError::Other("No images in sequence to encode".to_owned()))?;
 
             let mut out = Vec::new();
-            frame_1.write_to(&mut Cursor::new(&mut out), format)?;
+
+            if format == ImageFormat::Jpeg {
+                let rgb8 = frame_1.to_rgb8();
+                rgb8.write_to(&mut Cursor::new(&mut out), format)?;
+            } else {
+                frame_1.write_to(&mut Cursor::new(&mut out), format)?;
+            }
 
             out
         },

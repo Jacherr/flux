@@ -31,8 +31,12 @@ pub mod makesweet;
 pub mod meme;
 pub mod motivate;
 pub mod neon;
+pub mod overlay;
+pub mod paint;
 pub mod ping_pong;
+pub mod pixelate;
 pub mod posterize;
+pub mod rainbow;
 pub mod resize;
 pub mod reverse;
 pub mod scramble;
@@ -175,8 +179,16 @@ impl MediaContainer {
                 self.motivate(top, bottom)?
             },
             "neon" => self.neon()?,
+            "overlay" => self.overlay()?,
+            "paint" => self.paint()?,
             "ping-pong" => self.ping_pong()?,
+            "pixelate" => {
+                let strength = option_get_f32(&options, "strength")?;
+
+                self.pixelate(strength)?
+            },
             "posterize" => self.posterize(option_get_str(&options, "cols").unwrap())?,
+            "rainbow" => self.rainbow()?,
             "resize" => {
                 let width = option_get_u64(&options, "width")?;
                 let height = option_get_u64(&options, "height")?;

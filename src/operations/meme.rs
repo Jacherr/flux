@@ -12,11 +12,7 @@ impl MediaContainer {
         let input = self.pop_input()?;
 
         let mut input = input.to_dynamic_images(&self.limits)?.into_owned();
-        let first = input
-            .images
-            .first()
-            .map(|x| &x.0)
-            .ok_or(FluxError::CorruptInput("Input has no pages".to_owned()))?;
+        let first = &input.maybe_first()?.0;
 
         let width = first.width();
         let target_height = first.height() as usize / 5;

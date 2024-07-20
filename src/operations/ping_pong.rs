@@ -1,5 +1,6 @@
 use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
+use crate::processing::ffmpeg::ffmpeg_operations;
 use crate::processing::media_object::MediaObject;
 
 use super::OperationResult;
@@ -8,10 +9,8 @@ impl MediaContainer {
     pub fn ping_pong(&self) -> OperationResult {
         let input = self.pop_input()?;
 
-        if input.is_encoded_video() {
-            return Err(FluxError::InputMediaError(
-                "Ping-pong does not support video inputs.".to_owned(),
-            ));
+        if let Some(v) = input.try_encoded_video(self.limits.video_decode_permitted) {
+            return Ok(MediaObject::Encoded(ffmpeg_operations::gloop_video(v?)?));
         } else if let MediaObject::DynamicImages(ref d) = input
             && d.images.len() == 1
         {

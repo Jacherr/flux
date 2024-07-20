@@ -2,7 +2,6 @@ use image::{DynamicImage, GenericImage, GenericImageView, Rgb, Rgba};
 use imageproc::drawing::draw_hollow_rect_mut;
 use imageproc::rect::Rect;
 
-use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
 use crate::processing::css_framebuffer::ops;
 use crate::processing::framebuffer::FrameBufferOwned;
@@ -17,11 +16,7 @@ impl MediaContainer {
         let input = self.pop_input()?;
 
         let mut dyn_images = input.to_dynamic_images(&self.limits)?.into_owned();
-        let (in_width, in_height) = dyn_images
-            .images
-            .first()
-            .map(|x| x.0.dimensions())
-            .ok_or(FluxError::CorruptInput("Input has no frames".to_owned()))?;
+        let (in_width, in_height) = dyn_images.maybe_first()?.0.dimensions();
 
         let (extra_w, extra_h) = (100, 50);
 

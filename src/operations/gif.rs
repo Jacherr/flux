@@ -1,6 +1,5 @@
 use image::{Delay, GenericImageView};
 
-use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
 use crate::processing::encode::gif::encode;
 use crate::processing::ffmpeg::ffmpeg_operations;
@@ -21,12 +20,7 @@ impl MediaContainer {
         }
 
         let dyn_images = input.to_dynamic_images(&self.limits)?;
-        let (w, h) = dyn_images
-            .images
-            .get(0)
-            .ok_or(FluxError::CorruptInput("Input has no frames".to_owned()))?
-            .0
-            .dimensions();
+        let (w, h) = dyn_images.maybe_first()?.0.dimensions();
 
         let frames = dyn_images
             .images

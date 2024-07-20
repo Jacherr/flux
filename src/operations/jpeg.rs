@@ -26,7 +26,8 @@ impl MediaContainer {
             let mut buf = Vec::new();
             let out = Cursor::new(&mut buf);
             let mut jpeg = JpegEncoder::new_with_quality(out, quality.map(|q| q as u8).unwrap_or(5));
-            jpeg.encode_image(f)?;
+            let rgb8 = f.to_rgb8();
+            jpeg.encode_image(&rgb8)?;
             load_from_memory(&buf).map_err(|e| e.into())
         })?;
 
