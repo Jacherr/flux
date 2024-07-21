@@ -8,7 +8,10 @@
     try_trait_v2,
     let_chains,
     exitcode_exit_method,
-    compiler_builtins
+    compiler_builtins,
+    portable_simd,
+    link_llvm_intrinsics,
+    simd_ffi
 )]
 
 use core::flux::{Flux, StepAction};

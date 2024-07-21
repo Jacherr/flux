@@ -39,8 +39,14 @@ pub mod posterize;
 pub mod rainbow;
 pub mod resize;
 pub mod reverse;
+pub mod rotate;
 pub mod scramble;
+pub mod set_loop;
+pub mod speech_bubble;
 pub mod speed;
+pub mod spin;
+pub mod spread;
+pub mod swirl;
 
 pub type OperationResult = Result<MediaObject, FluxError>;
 
@@ -68,7 +74,7 @@ fn option_get_u64(options: &HashMap<String, String>, name: &str) -> Result<Optio
         .map(|x| {
             x.parse::<u64>().map_err(|_| {
                 FluxError::ParameterError(format!(
-                    "Failed to parse {name} (invalid u64 {})",
+                    "Failed to parse {name} (invalid uint64 {})",
                     options.get(name).unwrap()
                 ))
             })
@@ -83,6 +89,20 @@ fn option_get_f32(options: &HashMap<String, String>, name: &str) -> Result<Optio
             x.parse::<f32>().map_err(|_| {
                 FluxError::ParameterError(format!(
                     "Failed to parse {name} (invalid float32 {})",
+                    options.get(name).unwrap()
+                ))
+            })
+        })
+        .transpose()
+}
+
+fn option_get_i64(options: &HashMap<String, String>, name: &str) -> Result<Option<i64>, FluxError> {
+    options
+        .get(name)
+        .map(|x| {
+            x.parse::<i64>().map_err(|_| {
+                FluxError::ParameterError(format!(
+                    "Failed to parse {name} (invalid int64 {})",
                     options.get(name).unwrap()
                 ))
             })
@@ -199,15 +219,40 @@ impl MediaContainer {
                 self.resize(resize_options)?
             },
             "reverse" => self.reverse()?,
+            "rotate" => {
+                let deg = option_get_u64(&options, "degrees")?;
+
+                self.rotate(deg)?
+            },
             "rubiks" => self.rubiks()?,
             "scramble" => self.scramble()?,
+            "set-loop" => {
+                let loops = option_get_i64(&options, "loops")?;
+
+                self.set_loop(loops.unwrap_or(-1))?
+            },
             "siren" => self.siren()?,
+            "speech-bubble" => {
+                let t = option_get_bool(&options, "solid")?;
+                self.speech_bubble(t)?
+            },
             "speed" => {
                 let multiplier = option_get_f32(&options, "multiplier")?;
 
                 self.speed(multiplier.map(|m| m.into()))?
             },
+            "spin" => self.spin()?,
+            "spread" => {
+                let strength = option_get_u64(&options, "strength")?;
+
+                self.spread(strength)?
+            },
             "sweden" => self.siren()?,
+            "swirl" => {
+                let strength = option_get_f32(&options, "strength")?;
+
+                self.swirl(strength)?
+            },
             "terraria" => self.terraria()?,
             "toaster" => self.toaster()?,
             "valentine" => self.valentine()?,
