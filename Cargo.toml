@@ -24,3 +24,6 @@ time = "0.3.36"
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["time", "env-filter"] }
 zip = "2.1.3"
+
+[profile.release]
+debug = true

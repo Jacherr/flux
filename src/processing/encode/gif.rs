@@ -1,39 +1,10 @@
 use crate::core::error::FluxError;
 //use crate::framebuffer::FrameBuffer;
-use crate::processing::css_framebuffer::quant;
-use crate::processing::framebuffer::FrameBufferOwned;
 use crate::util::convert_ratio_to_integer;
 use gif::{AnyExtension, Frame};
 use image::codecs::gif::Repeat;
-use image::{Delay, DynamicImage};
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use image::{Delay, DynamicImage, GenericImageView};
 use std::convert::TryInto;
-
-fn convert_image_frame_to_gif_frame<'a>(w: u16, h: u16, delay: Delay, quant: quant::result) -> Frame<'a> {
-    let (numer, denom) = delay.numer_denom_ms();
-
-    let mut palette = vec![0u8; 3 * quant.palette.len()];
-
-    for (i, color) in quant.palette.iter().enumerate() {
-        palette[i * 3] = color.r;
-        palette[i * 3 + 1] = color.g;
-        palette[i * 3 + 2] = color.b;
-    }
-
-    let frame_delay = convert_ratio_to_integer(numer, denom);
-    if palette.len() > 3 {
-        palette[3] = palette[0];
-        palette[4] = palette[1];
-        palette[5] = palette[2];
-    }
-
-    let mut frame = Frame::from_palette_pixels(w, h, quant.index, palette, quant.transparency.map(|z| z as u8));
-
-    frame.delay = (frame_delay / 10).try_into().unwrap_or(std::u16::MAX);
-    frame.dispose = gif::DisposalMethod::Background;
-
-    frame
-}
 
 fn convert_repeat(repeat: Repeat) -> gif::Repeat {
     match repeat {
@@ -61,19 +32,20 @@ pub fn encode(
         .map_err(|e| FluxError::Other(e.to_string()))?;
 
     let new_frames: Vec<gif::Frame> = frames
-        .par_iter()
-        .map(|x| {
-            let fb = FrameBufferOwned::new_from_dyn_image(x.0);
+        .iter()
+        .map(|(img, delay)| {
+            let (w, h) = img.dimensions();
+            let px = img.to_rgba8();
+            let mut raw = px.into_raw();
 
-            let quant = quant::quantize(
-                &fb,
-                &quant::options {
-                    fast: false,
-                    ..Default::default()
-                },
-            );
+            let mut frame = Frame::from_rgba_speed(w as _, h as _, &mut raw, 15);
 
-            convert_image_frame_to_gif_frame(x.0.width() as _, x.0.height() as _, x.1, quant)
+            let (numer, denom) = delay.numer_denom_ms();
+            let frame_delay = convert_ratio_to_integer(numer, denom);
+            frame.delay = (frame_delay / 10).try_into().unwrap_or(std::u16::MAX);
+            frame.dispose = gif::DisposalMethod::Background;
+
+            frame
         })
         .collect::<Vec<_>>();
 

@@ -96,9 +96,20 @@ impl DynamicImagesMediaObject {
         self.images.get(corrected_index).unwrap()
     }
 
+    pub fn get_circular_neg_mut(&mut self, index: isize) -> &mut DynamicImageWrapper {
+        let corrected_index = collapse_neg(self.images.len() as isize, index);
+        self.images.get_mut(corrected_index).unwrap()
+    }
+
     pub fn maybe_first(&self) -> Result<&DynamicImageWrapper, FluxError> {
         self.images
             .first()
+            .ok_or(FluxError::CorruptInput("Input has no frames".to_owned()))
+    }
+
+    pub fn maybe_first_mut(&mut self) -> Result<&mut DynamicImageWrapper, FluxError> {
+        self.images
+            .first_mut()
             .ok_or(FluxError::CorruptInput("Input has no frames".to_owned()))
     }
 }

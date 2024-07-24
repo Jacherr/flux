@@ -36,14 +36,8 @@ fn gegl(image: &DynamicImage, args: &[&str]) -> DynamicImage {
     image::load_from_memory(&file).unwrap()
 }
 
-pub fn zoom_blur(image: &DynamicImage, factor: f64) -> DynamicImage {
-    gegl(
-        image,
-        &[
-            "motion-blur-zoom",
-            &format!("factor={}", (factor / 10.0).clamp(0.0, 10.0)),
-        ],
-    )
+pub fn zoom_blur(image: &DynamicImage, factor: f32) -> DynamicImage {
+    gegl(image, &["motion-blur-zoom", &format!("factor={factor}")])
 }
 
 pub fn softglow(image: &DynamicImage, radius: usize, brightness: usize, sharpness: usize) -> DynamicImage {

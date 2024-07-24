@@ -47,6 +47,10 @@ pub mod speed;
 pub mod spin;
 pub mod spread;
 pub mod swirl;
+pub mod uncaption;
+pub mod wormhole;
+pub mod zoom;
+pub mod zoom_blur;
 
 pub type OperationResult = Result<MediaObject, FluxError>;
 
@@ -255,7 +259,19 @@ impl MediaContainer {
             },
             "terraria" => self.terraria()?,
             "toaster" => self.toaster()?,
+            "uncaption" => {
+                let amount = option_get_str(&options, "amount");
+
+                self.uncaption(amount)?
+            },
             "valentine" => self.valentine()?,
+            "wormhole" => self.wormhole()?,
+            "zoom" => self.zoom()?,
+            "zoom-blur" => {
+                let power = option_get_f32(&options, "power")?;
+
+                self.zoom_blur(power)?
+            },
             // general ops
             "threshold" => self.threshold(option_get_f32(&options, "threshold")?)?,
             "channels" => self.channels(option_get_str(&options, "keep"))?,
