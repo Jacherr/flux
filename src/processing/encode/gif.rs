@@ -6,7 +6,6 @@ use image::codecs::gif::Repeat;
 use image::{Delay, DynamicImage, GenericImageView};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::convert::TryInto;
-use std::time::Instant;
 
 fn convert_repeat(repeat: Repeat) -> gif::Repeat {
     match repeat {
