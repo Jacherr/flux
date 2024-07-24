@@ -1,7 +1,8 @@
+use std::time::Duration;
+
 use image::{Delay, GenericImageView};
 
 use crate::core::media_container::MediaContainer;
-use crate::processing::encode::gif::encode;
 use crate::processing::ffmpeg::ffmpeg_operations;
 use crate::processing::filetype::{get_sig, Type};
 use crate::processing::media_object::MediaObject;
@@ -21,15 +22,17 @@ impl MediaContainer {
 
         let dyn_images = input.to_dynamic_images(&self.limits)?;
         let (w, h) = dyn_images.maybe_first()?.0.dimensions();
+        let repeat = dyn_images.repeat;
 
         let frames = dyn_images
-            .images
-            .iter()
-            .map(|d| (&d.0, Delay::from_saturating_duration(d.1.unwrap_or_default())))
+            .into_owned()
+            .into_images()
+            .into_iter()
+            .map(|x| (x.0, Delay::from_saturating_duration(x.1.unwrap_or(Duration::default()))))
             .collect::<Vec<_>>();
 
-        let enc = encode(frames, w as u16, h as u16, dyn_images.repeat)?;
+        let out = crate::processing::encode::gif::encode(frames, w as u16, h as u16, repeat)?;
 
-        Ok(MediaObject::Encoded(enc))
+        Ok(MediaObject::Encoded(out))
     }
 }

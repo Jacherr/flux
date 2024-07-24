@@ -4,7 +4,9 @@ use crate::util::convert_ratio_to_integer;
 use gif::{AnyExtension, Frame};
 use image::codecs::gif::Repeat;
 use image::{Delay, DynamicImage, GenericImageView};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::convert::TryInto;
+use std::time::Instant;
 
 fn convert_repeat(repeat: Repeat) -> gif::Repeat {
     match repeat {
@@ -14,7 +16,7 @@ fn convert_repeat(repeat: Repeat) -> gif::Repeat {
 }
 
 pub fn encode(
-    frames: Vec<(&DynamicImage, Delay)>,
+    frames: Vec<(DynamicImage, Delay)>,
     width: u16,
     height: u16,
     repeat: Repeat,
@@ -32,10 +34,10 @@ pub fn encode(
         .map_err(|e| FluxError::Other(e.to_string()))?;
 
     let new_frames: Vec<gif::Frame> = frames
-        .iter()
+        .into_par_iter()
         .map(|(img, delay)| {
             let (w, h) = img.dimensions();
-            let px = img.to_rgba8();
+            let px = img.into_rgba8();
             let mut raw = px.into_raw();
 
             let mut frame = Frame::from_rgba_speed(w as _, h as _, &mut raw, 15);

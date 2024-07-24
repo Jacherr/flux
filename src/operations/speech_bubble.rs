@@ -60,25 +60,16 @@ impl MediaContainer {
             canvas
         });
 
-        let r#ref = dyn_images.maybe_first()?;
+        let (w, h) = dyn_images.maybe_first()?.0.dimensions();
+        let repeat = dyn_images.repeat;
 
         let frames = dyn_images
-            .images
-            .iter()
-            .map(|x| {
-                (
-                    &x.0,
-                    Delay::from_saturating_duration(x.1.unwrap_or(Duration::default())),
-                )
-            })
+            .into_images()
+            .into_iter()
+            .map(|x| (x.0, Delay::from_saturating_duration(x.1.unwrap_or(Duration::default()))))
             .collect::<Vec<_>>();
 
-        let out = crate::processing::encode::gif::encode(
-            frames,
-            r#ref.0.width() as u16,
-            r#ref.0.height() as u16,
-            dyn_images.repeat,
-        )?;
+        let out = crate::processing::encode::gif::encode(frames, w as u16, h as u16, repeat)?;
 
         Ok(MediaObject::Encoded(out))
     }

@@ -2,7 +2,7 @@ use std::io::Cursor;
 use std::time::Duration;
 
 use image::codecs::png::PngEncoder;
-use image::{load_from_memory, Delay, ExtendedColorType, ImageEncoder, ImageFormat};
+use image::{load_from_memory, Delay, ExtendedColorType, GenericImageView, ImageEncoder, ImageFormat};
 
 use crate::core::error::FluxError;
 use crate::core::media_container::DecodeLimits;
@@ -22,25 +22,16 @@ pub fn encode_auto(obj: MediaObject, limits: &DecodeLimits) -> Result<Vec<u8>, F
                 let inner_images = image_object.images.iter().map(|x| x.0.clone()).collect::<Vec<_>>();
                 create_video_from_split(inner_images, audio, limits)
             } else if image_object.images.len() > 1 {
-                let r#ref = image_object.images.first().unwrap();
+                let (w, h) = image_object.maybe_first()?.0.dimensions();
+                let repeat = image_object.repeat;
 
                 let frames = image_object
-                    .images
-                    .iter()
-                    .map(|x| {
-                        (
-                            &x.0,
-                            Delay::from_saturating_duration(x.1.unwrap_or(Duration::default())),
-                        )
-                    })
+                    .into_images()
+                    .into_iter()
+                    .map(|x| (x.0, Delay::from_saturating_duration(x.1.unwrap_or(Duration::default()))))
                     .collect::<Vec<_>>();
 
-                super::encode::gif::encode(
-                    frames,
-                    r#ref.0.width() as u16,
-                    r#ref.0.height() as u16,
-                    image_object.repeat,
-                )
+                super::encode::gif::encode(frames, w as u16, h as u16, repeat)
             } else {
                 let image = &image_object.images.first().unwrap().0;
                 let rgba_image = image.to_rgba8();

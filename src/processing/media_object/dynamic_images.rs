@@ -112,4 +112,8 @@ impl DynamicImagesMediaObject {
             .first_mut()
             .ok_or(FluxError::CorruptInput("Input has no frames".to_owned()))
     }
+
+    pub fn into_images(self) -> Vec<DynamicImageWrapper> {
+        self.images
+    }
 }
