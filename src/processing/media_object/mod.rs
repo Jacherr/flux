@@ -28,13 +28,12 @@ impl MediaObject {
         match self {
             Self::DynamicImages(_) => None,
             Self::Encoded(enc) => {
-                if !decode_permitted {
-                    return Some(Err(FluxError::VideoDecodeDisabled));
-                }
-
-                let ty = get_sig_incl_mp4(enc);
-                if ty.is_some_and(|ty| ty == Type::Mp4 || ty == Type::Webm) {
-                    Some(Ok(enc))
+                if self.is_encoded_video() {
+                    if !decode_permitted {
+                        return Some(Err(FluxError::VideoDecodeDisabled));
+                    } else {
+                        Some(Ok(enc))
+                    }
                 } else {
                     None
                 }
