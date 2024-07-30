@@ -251,7 +251,7 @@ impl MediaContainer {
 
                 self.spread(strength)?
             },
-            "sweden" => self.siren()?,
+            "sweden" => self.sweden()?,
             "swirl" => {
                 let strength = option_get_f32(&options, "strength")?;
 
