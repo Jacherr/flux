@@ -37,7 +37,7 @@ pub enum FluxError {
     #[error("This operation only supports inputs with more than one frame.")]
     SinglePageMediaUnsupported,
     #[error(
-        "Video support is enabled either by voting at https://vote.jacher.io/topgg (for temporary access) or by becoming a patron."
+        "Video support is enabled through voting, becoming a patron, or upgrading this server to a premium server through Assyst's Discord store."
     )]
     VideoDecodeDisabled,
     #[error("Error: {0}")]
