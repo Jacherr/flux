@@ -1,25 +1,25 @@
-use image::{load_from_memory, DynamicImage, GenericImageView};
+use image::{load_from_memory, DynamicImage};
+use imageproc::edges::canny;
 
 use crate::core::error::FluxError;
 use crate::core::media_container::MediaContainer;
 use crate::processing::ffmpeg::{self, ffmpeg_operations};
 use crate::processing::media_object::MediaObject;
-use crate::vips::vips_canny;
 
 use super::OperationResult;
 
 fn uncaption_get_row(image: &DynamicImage) -> Result<u32, FluxError> {
-    let (w, h) = image.dimensions();
-
-    let canny = vips_canny(image.as_bytes(), w as usize, h as usize, 5.0)?;
+    let canny = canny(&image.to_luma8(), 0.5, 1.5);
     let mut row_num: u32 = 0;
 
-    for (idx, mut row) in canny.into_rgba8().rows_mut().enumerate() {
-        let leftmost = row.nth(3).unwrap();
-        let lightness = leftmost.0;
-        if lightness[0] > 0 {
-            row_num = idx as u32 + 1;
-            break;
+    for (idx, row) in canny.rows().enumerate() {
+        // first 5 pixels
+        for px in row.take(5) {
+            let lightness = px.0;
+            if lightness[0] > 0 {
+                row_num = idx as u32 + 1;
+                return Ok(row_num);
+            }
         }
     }
 
@@ -85,6 +85,10 @@ impl MediaContainer {
         } else {
             uncaption_get_row(&first)?
         };
+
+        if row >= height {
+            return Err(FluxError::InputMediaError("No caption boundary found.".to_owned()));
+        }
 
         dyn_images.iter_images_mut(|f, _| f.crop(0, row, f.width(), f.height()));
 

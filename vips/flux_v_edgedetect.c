@@ -11,10 +11,12 @@ int v_canny(char *input, size_t len, int width, int height, char **output, size_
     }
 
     RETURN_NONZERO(
-        vips_canny(image, &image, "sigma", sigma, NULL));
+        vips_cast(image, &image, VIPS_FORMAT_UCHAR, NULL));
 
     RETURN_NONZERO(
-        vips_cast(image, &image, VIPS_FORMAT_UCHAR, NULL));
+        vips_canny(image, &image, "sigma", sigma, NULL));
+
+    vips_pngsave(image, "/home/james/stuff/c.png", NULL);
 
     *output = vips_image_write_to_memory(image, size);
 

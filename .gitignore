@@ -20,3 +20,4 @@ Cargo.lock
 /build
 profile.json
 /test
+**/*.swp
