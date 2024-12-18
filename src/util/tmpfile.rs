@@ -31,3 +31,28 @@ impl Drop for TmpFile {
         let _ = fs::remove_file(&self.0);
     }
 }
+
+#[derive(Clone)]
+pub struct TmpFolder(String, String);
+impl TmpFolder {
+    pub fn new<S>(name: S) -> Self
+    where
+        S: AsRef<str> + Display,
+    {
+        let path = format!("/tmp/{}-flux-{name}", std::process::id());
+        TmpFolder(path, name.to_string())
+    }
+
+    pub fn path(&self) -> &str {
+        &self.0
+    }
+
+    pub fn filename(&self) -> &str {
+        &self.1
+    }
+}
+impl Drop for TmpFolder {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.0);
+    }
+}

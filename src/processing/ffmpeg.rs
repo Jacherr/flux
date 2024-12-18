@@ -17,7 +17,7 @@ use super::filetype::{get_sig, Type};
 use crate::core::error::FluxError;
 use crate::core::media_container::DecodeLimits;
 use crate::util::owned_child::IntoOwnedChild;
-use crate::util::tmpfile::TmpFile;
+use crate::util::tmpfile::{TmpFile, TmpFolder};
 use crate::util::{hash_buffer, pad_left};
 
 pub fn run_ffmpeg_command(commands: &[&str], pre_commands: &[&str], input: &[u8]) -> Result<Vec<u8>, FluxError> {
@@ -349,19 +349,21 @@ pub fn create_video_from_split(
 ) -> Result<Vec<u8>, FluxError> {
     let cpus = num_cpus::get().to_string();
 
-    let folder = format!("/tmp/{}", hash_buffer(&[1, 2, 3, 4]));
-    let files = format!("{}/*.bmp", folder);
+    let folder_name = hash_buffer(&[1, 2, 3, 4]);
+    let files = format!("{}/*.bmp", folder_name);
 
-    std::fs::create_dir(format!("{}", folder))?;
+    std::fs::create_dir(format!("{}", folder_name))?;
+    // drop = delete folder
+    let _tmpfolder = TmpFolder::new(&folder_name);
 
     for image in dyn_images.iter().enumerate() {
         image.1.save_with_format(
-            format!("{}/{}.bmp", folder, pad_left(image.0.to_string(), 5, '0')),
+            format!("{}/{}.bmp", folder_name, pad_left(image.0.to_string(), 5, '0')),
             image::ImageFormat::Bmp,
         )?;
     }
 
-    let out_path = format!("{}/output.mp4", folder);
+    let out_path = format!("{}/output.mp4", folder_name);
 
     let mut args = Vec::from(["-y", "-hide_banner", "-loglevel", "error"]);
     let fps = limits.frame_rate_limit.unwrap_or(20).to_string();
