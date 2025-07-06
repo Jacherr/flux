@@ -129,7 +129,7 @@ mod llvm_bindings {
 
     use core::simd::f32x8;
 
-    extern "C" {
+    unsafe extern "C" {
         #[link_name = "llvm.cos.v8f32"]
         pub fn cos_v8f32(i: f32x8) -> f32x8;
         #[link_name = "llvm.floor.v8f32"]

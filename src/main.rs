@@ -1,11 +1,8 @@
 #![allow(internal_features)]
 #![feature(
     decl_macro,
-    const_slice_from_raw_parts_mut,
-    const_mut_refs,
     core_intrinsics,
     try_trait_v2,
-    let_chains,
     exitcode_exit_method,
     compiler_builtins,
     portable_simd,
@@ -20,8 +17,8 @@ use std::{fs, thread};
 use signal_hook::consts::SIGTERM;
 use signal_hook::iterator::Signals;
 use time::format_description;
-use tracing_subscriber::fmt::time::UtcTime;
 use tracing_subscriber::EnvFilter;
+use tracing_subscriber::fmt::time::UtcTime;
 use vips::ffi::v_vips_init;
 
 pub mod core;

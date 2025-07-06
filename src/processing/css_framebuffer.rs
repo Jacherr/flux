@@ -4,6 +4,7 @@
 #![warn(clippy::correctness)]
 #![allow(non_camel_case_types)]
 #![allow(non_upper_case_globals)]
+#![allow(unsafe_op_in_unsafe_fn)]
 
 macro size_of($type:ty) {
     std::mem::size_of::<$type>()

@@ -1,6 +1,6 @@
 use std::ffi::{c_char, c_double, c_int};
 
-extern "C" {
+unsafe extern "C" {
     pub fn v_vips_init() -> c_int;
     pub fn v_transcode_to(
         input: *const u8,

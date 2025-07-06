@@ -24,7 +24,7 @@ pub fn pad_left(s: String, m: usize, c: char) -> String {
 pub fn hash_buffer(buf: &[u8]) -> String {
     let mut body_hasher = DefaultHasher::new();
     buf.hash(&mut body_hasher);
-    let rand = rand::thread_rng().gen::<usize>();
+    let rand = rand::thread_rng().r#gen::<usize>();
     format!("{:x}{:x}", body_hasher.finish(), rand)
 }
 
