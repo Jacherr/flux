@@ -8,12 +8,13 @@ use std::thread::spawn;
 use std::time::Duration;
 
 use anyhow::Context;
-use image::{load_from_memory, DynamicImage};
+use image::{DynamicImage, load_from_memory};
 use rand::distributions::Alphanumeric;
 use rand::prelude::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
+use tracing_subscriber::fmt::format;
 
-use super::filetype::{get_sig, Type};
+use super::filetype::{Type, get_sig};
 use crate::core::error::FluxError;
 use crate::core::media_container::DecodeLimits;
 use crate::util::owned_child::IntoOwnedChild;
@@ -350,20 +351,21 @@ pub fn create_video_from_split(
     let cpus = num_cpus::get().to_string();
 
     let folder_name = hash_buffer(&[1, 2, 3, 4]);
-    let files = format!("{}/*.bmp", folder_name);
+    let folder_path = format!("/tmp/{folder_name}");
+    let files = format!("{}/*.bmp", folder_path);
 
-    std::fs::create_dir(format!("{}", folder_name))?;
+    std::fs::create_dir(format!("{}", folder_path))?;
     // drop = delete folder
-    let _tmpfolder = TmpFolder::new(&folder_name);
+    let _tmpfolder = TmpFolder::new(&folder_path);
 
     for image in dyn_images.iter().enumerate() {
         image.1.save_with_format(
-            format!("{}/{}.bmp", folder_name, pad_left(image.0.to_string(), 5, '0')),
+            format!("{}/{}.bmp", folder_path, pad_left(image.0.to_string(), 5, '0')),
             image::ImageFormat::Bmp,
         )?;
     }
 
-    let out_path = format!("{}/output.mp4", folder_name);
+    let out_path = format!("{}/output.mp4", folder_path);
 
     let mut args = Vec::from(["-y", "-hide_banner", "-loglevel", "error"]);
     let fps = limits.frame_rate_limit.unwrap_or(20).to_string();
