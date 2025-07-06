@@ -795,7 +795,7 @@ pub mod ffmpeg_operations {
             &[
                 "-vf",
                 &format!(
-                    "{}split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
+                    "{}fps=15,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse",
                     if dimensions.0 > 384 {
                         "scale=384:-1:flags=lanczos,"
                     } else {
