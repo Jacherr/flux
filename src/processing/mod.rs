@@ -1,7 +1,7 @@
 use std::f32::consts::PI;
 use std::simd::cmp::SimdPartialOrd;
 use std::simd::num::SimdFloat;
-use std::simd::{f32x8, u32x8};
+use std::simd::{f32x8, u32x8, Select};
 
 use image::imageops::overlay;
 use image::{DynamicImage, GenericImage, GenericImageView};
